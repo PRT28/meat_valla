@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "553907136224",
+    "project_id": "meat-delivery-c9079",
+    "storage_bucket": "meat-delivery-c9079.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:553907136224:android:88fed95e17f97445539285",
+        "android_client_info": {
+          "package_name": "com.prt.meat_delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy2FQ5r6OrT2V_Sp4e0Q_eotF6wHoA0S4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
