@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/ClickCard.dart';
+import 'package:meat_delivery/pages/PLP.dart';
 import 'package:meat_delivery/pages/Settings.dart' as app_settings;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -21,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
 
     Future<Map<String, List<DocumentSnapshot>>> fetchData() async {
-      var categories = FirebaseFirestore.instance.collection('categories').limit(4).get();
+      var categories = FirebaseFirestore.instance.collection('category').limit(4).get();
       var banner = FirebaseFirestore.instance.collection('banner').get();
       var results = await Future.wait([categories, banner]);
       return {
@@ -88,10 +89,13 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(
                         height: 15,
                       ),
-                      const SizedBox(
-                        width: 500,
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
                         child: TextField(
-                          decoration: InputDecoration(
+                          onSubmitted: (s) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => PLP(title: s)));
+                          },
+                          decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.search),
                             filled: true,
                             fillColor: Color(0xFFF1F0F5),
@@ -107,6 +111,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(
                         height: 10,
                       ),
+                      banner.isEmpty ? const SizedBox.shrink() :
                       CarouselSlider(
                           items: banner.map((e) {
                             var data = e.data() as Map<String, dynamic>;
@@ -131,15 +136,6 @@ class _HomePageState extends State<HomePage> {
                             viewportFraction: 0.8,
                           )
                       ),
-                      // Container(
-                      //   clipBehavior: Clip.hardEdge,
-                      //   decoration: BoxDecoration(
-                      //     borderRadius: BorderRadius.circular(12),
-                      //   ),
-                      //   child: const Image(
-                      //       image: NetworkImage("https://cdn.create.vista.com/downloads/a4b7a196-a357-4d75-ace5-6fba62b5e78c_1024.jpeg")
-                      //   ),
-                      // ),
                       const SizedBox(
                         height: 15,
                       ),

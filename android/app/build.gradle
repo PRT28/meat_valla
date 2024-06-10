@@ -30,6 +30,7 @@ dependencies {
 
 
     implementation("com.google.firebase:firebase-auth:19.0.0")
+    implementation 'com.android.support:multidex:1.0.3'
 }
 
 
@@ -52,6 +53,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {

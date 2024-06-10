@@ -2,6 +2,9 @@ import "package:flutter/material.dart";
 import "package:meat_delivery/components/Button.dart";
 import "package:meat_delivery/pages/Address.dart";
 import "package:meat_delivery/pages/OrderSuccess.dart";
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:meat_delivery/models/Orders.dart';
 
 class AddressTextButton extends StatelessWidget {
   
@@ -74,88 +77,159 @@ class AddressList extends StatefulWidget {
 
 class _AddressListState extends State<AddressList> {
 
+
+  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+
   int _selected = 1;
 
-  setSelected(id) {
-    setState(() {
-      _selected = id;
+  setSelected(id) async {
+    var address = await FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
+    var data = address.data();
+    data?['selected'] = id;
+    FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).set(data!, SetOptions(merge: true)).then((value) {
+      setState(() {
+        _selected = id;
+      });
     });
+
   }
 
   @override
   Widget build(BuildContext context) {
+
+
+    Future<DocumentSnapshot<Map<String, dynamic>>> fetchData() async {
+      DocumentSnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
+                                              .instance
+                                              .collection('address')
+                                              .doc(phone?.substring(3))
+                                              .get();
+      return querySnapshot;
+    }
+
+    placeOrder() async {
+      var cart = FirebaseFirestore.instance.collection('cart').doc(phone?.substring(3)).get();
+      var address = FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
+      var results = await Future.wait([cart, address]);
+      if (widget.isOrder) {
+        Orders order = Orders(
+            status: Status.confirmed.toString(),
+            orderDetails: results[0]['details'],
+            address: results[1]['list'][results[1]['selected']],
+            user: phone!.substring(3).toString(),
+            total: results[0]['cartTotal']
+        );
+        order.setObject().then((value) async {
+          await FirebaseFirestore.instance.collection('cart').doc(phone?.substring(3)).delete().then((e) {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderSuccess()));
+          });
+        });
+      } else {
+        Navigator.of(context).pop();
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDFA),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Button(
-            onClick: () {
-              if (widget.isOrder) {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderSuccess()));
-              } else {
-                Navigator.of(context).pop();
-              }
-
-              },
+            onClick:placeOrder,
             label: widget.isOrder ? "Place Order" : "Okay"
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const Hero(
-                    tag: "address-icon",
-                    child:  Icon(
+      body:FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        future: fetchData(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (snapshot.hasError) {
+        return Center(child: Text('Error: ${snapshot.error}'));
+      } else if (!snapshot.hasData || !snapshot.data!.exists) {
+        // Show a message if no data is found
+        print(!snapshot.hasData);
+        print(snapshot.data!.exists);
+        print(!snapshot.hasData || !snapshot.data!.exists);
+        return const Center(child: Text('No Data Found'));
+      } else {
+
+        DocumentSnapshot<Map<String, dynamic>> address = snapshot.data!;
+
+        // setState(() {
+        //   _selected = address['selected'];
+        // });
+
+        List<dynamic> addressList = address['list'];
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Hero(
+                      tag: "address-icon",
+                      child:  Icon(
                         Icons.home_filled,
-                      size: 80,
-                      color: Color(0xFF850E35),
-                    )
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Text("Address",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600
-                ),),
-                const SizedBox(
-                  height: 20,
-                ),
-                AddressTextButton(
-                    title: "Address 1",
-                    id: 1,
-                    selected: 1 == _selected,
-                    setSelected: setSelected,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                AddressTextButton(
-                  title: "Address 2",
-                  id: 2,
-                  selected: 2 == _selected,
-                  setSelected: setSelected,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                AddressTextButton(
-                  title: "Address 3",
-                  id: 3,
-                  selected: 3 == _selected,
-                  setSelected: setSelected,
-                ),
-              ],
+                        size: 80,
+                        color: Color(0xFF850E35),
+                      )
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Text("Address",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600
+                    ),),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Column(
+                    children:  addressList.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      var e = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                        child: AddressTextButton(
+                          title: e,
+                          id: index,
+                          selected: index == _selected,
+                          setSelected: setSelected,
+                        ),
+                      );
+                    }).toList()
+                  ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+
+
+
+                  addressList.length < 3 ? TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Address(title: null)));
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text("Add new address",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 15
+                        ),
+                      )
+                  ) : const SizedBox.shrink()
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      }
+      }
+      )
     );
   }
 }

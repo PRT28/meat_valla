@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/Button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SendFeedback extends StatefulWidget {
-  final String? title;
-  const SendFeedback({super.key, this.title});
+  const SendFeedback({super.key});
+
 
   @override
   State<SendFeedback> createState() => _SendFeedbackState();
@@ -15,7 +17,7 @@ class _SendFeedbackState extends State<SendFeedback> {
   @override
   void initState() {
     super.initState();
-    addressController = TextEditingController(text: widget.title);
+    addressController = TextEditingController();
   }
 
   @override
@@ -24,8 +26,22 @@ class _SendFeedbackState extends State<SendFeedback> {
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
+
+    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+
+    sendFeedback() async {
+      await FirebaseFirestore.instance.collection('feedback').add({
+        'feedback': addressController.text.toString().trim(),
+        'user': phone?.substring(3)
+      }).then((value) {
+        Navigator.of(context).pop();
+      });
+
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDFA),
       appBar: AppBar(
@@ -40,8 +56,8 @@ class _SendFeedbackState extends State<SendFeedback> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Button(
-            onClick: () {Navigator.of(context).pop();},
-            label: "Save Address"
+            onClick: sendFeedback,
+            label: "Send"
         ),
       ),
       body: Padding(
@@ -52,7 +68,7 @@ class _SendFeedbackState extends State<SendFeedback> {
               controller: addressController,
               maxLines: 8,
               decoration: InputDecoration(
-                labelText: "Address",
+                labelText: "Write your feedback",
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.grey, width: 2.0),
                   borderRadius: BorderRadius.circular(12.0),

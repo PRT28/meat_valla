@@ -14,7 +14,14 @@ Future<void> main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     Map<int, Color> getSwatch(Color color) {
@@ -40,8 +47,9 @@ class MyApp extends StatelessWidget {
       };
     }
 
+
     return MaterialApp(
-      title: "Meat Shop",
+      title: "Meat Wala",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF850E35)),

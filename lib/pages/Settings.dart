@@ -5,6 +5,8 @@ import 'package:meat_delivery/pages/AddressList.dart';
 import 'package:meat_delivery/pages/EditProfile.dart';
 import 'package:meat_delivery/pages/Favourites.dart';
 import 'package:meat_delivery/pages/Login.dart';
+import 'package:meat_delivery/pages/OrderHistory.dart';
+import 'package:meat_delivery/pages/SendFeedback.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -84,7 +86,7 @@ class _SettingsState extends State<Settings> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const Favourites()));
                   },
                   icon: const Icon(Icons.favorite),
-                  label: const Text("Favourites.dart",
+                  label: const Text("Favourites",
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18
@@ -109,7 +111,9 @@ class _SettingsState extends State<Settings> {
               ),
 
               TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderHistory()));
+                  },
                   icon: const Icon(Icons.history),
                   label: const Text("Order History",
                     style: TextStyle(
@@ -132,7 +136,9 @@ class _SettingsState extends State<Settings> {
               ),
 
               TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SendFeedback()));
+                  },
                   icon: const Icon(Icons.send),
                   label: const Text("Send Feedback",
                     style: TextStyle(

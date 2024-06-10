@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/Button.dart';
+import 'package:meat_delivery/models/CartModel.dart';
 import 'package:meat_delivery/pages/Cart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PDP extends StatefulWidget {
 
-  final int id;
+  final Map<String, dynamic> data;
 
-  const PDP({super.key, required this.id});
+  const PDP({super.key, required this.data});
 
   @override
   State<PDP> createState() => _PDPState();
@@ -15,20 +18,21 @@ class PDP extends StatefulWidget {
 class _PDPState extends State<PDP> {
   int _countItem = 0;
   bool isAdded = false;
+  String s = '';
+
+  @override
+  void initState() {
+    super.initState();
+    s = widget.data['name'];
+    s.replaceAll(' ', '-');
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDFA),
-      appBar: AppBar(
-          title: const Text(
-            "Chicken",
-            style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700
-            ),
-          )
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: SafeArea(
@@ -36,16 +40,30 @@ class _PDPState extends State<PDP> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              Row(
+                children: <Widget>[
+                  const BackButton(),
+                  Expanded(
+                    child: Text('${widget.data['name']}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 4,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        )),
+                  )
+                ],
+              ),
               Hero(
-                tag: 'plp-title-${widget.id}',
-                  child: const Image(
-                      image: NetworkImage("https://st3.depositphotos.com/2125603/34616/i/450/depositphotos_346166616-stock-photo-raw-chicken-body-isolated-white.jpg")
+                tag: 'plp-title-$s',
+                  child: Image(
+                      image: NetworkImage(widget.data['img'])
                   )
               ),
 
-              const Text("Price: 455\$",
+              Text("Price: ₹${widget.data['price']}",
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600
               ),),
@@ -66,7 +84,7 @@ class _PDPState extends State<PDP> {
                                   return const Color(0xFF850E35);
                                 })
                             ),
-                            onPressed: _countItem > 0 ? () {
+                            onPressed: _countItem > 0 && !isAdded ? () {
                               setState(() {
                                 _countItem = _countItem - 1;
                               });
@@ -75,7 +93,7 @@ class _PDPState extends State<PDP> {
                             icon: Icon(Icons.remove, color: _countItem > 0 ? Colors.white : Colors.grey,)
                         ),
                       ),
-                      Text("${_countItem}"),
+                      Text("Qty: ${_countItem}"),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
                         child: IconButton(
@@ -87,11 +105,11 @@ class _PDPState extends State<PDP> {
                                 return Color(0xFF850E35);
                               }),
                             ),
-                            onPressed: () {
+                            onPressed: !isAdded ? () {
                               setState(() {
                                 _countItem = _countItem + 1;
                               });
-                            },
+                            } : null,
                             icon: const Icon(Icons.add, color: Colors.white)
                         ),
                       ),
@@ -99,27 +117,98 @@ class _PDPState extends State<PDP> {
                   ),
                ),
 
-              const Text('''Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus sapien vitae justo tempus euismod. Suspendisse Praesent ante lectus, placerat eu eros efficitur, condimentum ullamcorper purus. Phasellus eleifend lectus nec consequat commodo. Nullam accumsan fermentum blandit. Cras vel enim ut est bibendum euismod.'''),
+              Text(widget.data['desc']),
 
               const SizedBox(
                 height: 30,
               ),
 
               !isAdded ? Button(
-                  onClick: () {
-                    setState(() {
-                      isAdded = true;
-                    });
+                  onClick: () async {
+                    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+                    if (phone == null) {
+                      print('User not logged in');
+                      return;
+                    }
+
+                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(phone).get();
+
+                    if (!cart.exists || cart.data() == null || cart.data()!.isEmpty) {
+                      CartDetails cartDetails = CartDetails(
+                        qty: _countItem,
+                        name: widget.data['name'],
+                        price: widget.data['price'],
+                      );
+                      CartModel cartModel = CartModel(
+                        details: [cartDetails],
+                        cartTotal: (widget.data['price'] * _countItem),
+                      );
+                      cartModel.setObject(phone.substring(3)).then((value) {
+                        setState(() {
+                          isAdded = true;
+                        });
+                      });
+                    } else {
+                      var data = cart.data()!;
+                      var cartDetailsList = data['details'] as List<dynamic>? ?? [];
+
+                      // Create a new CartDetails object
+                      CartDetails newVal = CartDetails(
+                        qty: _countItem,
+                        name: widget.data['name'],
+                        price: widget.data['price'],
+                      );
+
+                      // Add the new CartDetails object to the list
+                      cartDetailsList.add(newVal.toJson());
+
+                      // Update the cart data
+                      data['details'] = cartDetailsList;
+                      data['cartTotal'] = (data['cartTotal'] ?? 0) + (widget.data['price'] * _countItem);
+
+                      // Update Firestore with the new cart data
+                      await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).set(data).then((value) {
+                        setState(() {
+                          isAdded = true;
+                        });
+                      });
+                    }
                   },
                   disable: _countItem == 0,
                   label: "Add to cart"
               ) : const SizedBox.shrink(),
 
               isAdded ? Button(
-                  onClick: () {
-                    setState(() {
-                      isAdded = false;
-                    });
+                  onClick: () async {
+                    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+                    if (phone == null) {
+                      print('User not logged in');
+                      return;
+                    }
+                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).get();
+
+                    if (!cart.exists || cart.data() == null || cart.data()!.isEmpty) {
+                      // Logic to display somthing went wrong
+                      print('aaaa');
+                    } else {
+                      
+                      var data = cart.data()!;
+                      var cartDetailsList = data['details'] as List<dynamic>? ?? [];
+
+                      cartDetailsList.removeWhere((item) => item['name'] == widget.data['name']);
+
+                      // Update the cart data
+                      data['details'] = cartDetailsList;
+                      data['cartTotal'] = (data['cartTotal'] ?? 0) - (widget.data['price'] * _countItem);
+
+                      // Update Firestore with the new cart data
+                      await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).set(data).then((value) {
+                        setState(() {
+                          isAdded = false;
+                        });
+                      });
+                    }
+
                   },
                   label: "Remove from cart",
               ) : const SizedBox.shrink(),

@@ -12,7 +12,7 @@ class Categories extends StatefulWidget {
 class _CategoriesState extends State<Categories> {
 
   Future<List<DocumentSnapshot>> fetchData() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('categories').get();
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('category').get();
     return querySnapshot.docs;
   }
 

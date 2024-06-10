@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/Button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Address extends StatefulWidget {
   final String? title;
@@ -26,6 +28,26 @@ class _AddressState extends State<Address> {
 
   @override
   Widget build(BuildContext context) {
+
+    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+
+    saveAddress() async {
+      var address = await FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
+      var data = address.data();
+      List<dynamic> addressList = data?['list'];
+      if (widget.title == null) {
+        addressList.add(addressController.text.toString().trim());
+      } else {
+        int index = addressList.indexOf(widget.title);
+        addressList[index] = addressController.text.toString().trim();
+      }
+      data?['list'] = addressList;
+      FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).set(data!, SetOptions(merge: true)).then((value) {
+        Navigator.of(context).pop();
+      });
+
+    }
+    
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDFA),
       appBar: AppBar(
@@ -40,7 +62,7 @@ class _AddressState extends State<Address> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Button(
-            onClick: () {Navigator.of(context).pop();},
+            onClick: saveAddress,
             label: "Save Address"
         ),
       ),

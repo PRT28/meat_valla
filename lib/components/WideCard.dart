@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 
 class WideCard extends StatelessWidget {
 
-  final int id;
+  final String id;
   final String title;
   final bool showFav;
   final Function showFavClick;
   final VoidCallback cardClick;
   final bool reorder;
+  final String imgUrl;
 
   const WideCard({
     super.key,
@@ -17,7 +18,8 @@ class WideCard extends StatelessWidget {
     required this.showFav,
     required this.showFavClick,
     required this.cardClick,
-    required this.reorder
+    required this.reorder,
+    required this.imgUrl
   });
 
 
@@ -45,16 +47,16 @@ class WideCard extends StatelessWidget {
                 children: [
                   Hero(
                     tag: 'plp-title-${id}',
-                    child: const Image(
-                      image: NetworkImage("https://st3.depositphotos.com/2125603/34616/i/450/depositphotos_346166616-stock-photo-raw-chicken-body-isolated-white.jpg"),
+                    child: Image(
+                      image: NetworkImage(imgUrl),
                       height: 80,
                       width: 80,
                     ),
                   ),
                    Text(title,
                       style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500
                       )),
                 ],
               ),
@@ -66,6 +68,7 @@ class WideCard extends StatelessWidget {
 
               showFav ? FavoriteButton(
                   iconSize: 36,
+                  isFavorite: showFav,
                   valueChanged: showFavClick) : const SizedBox.shrink(),
             ],
           ),

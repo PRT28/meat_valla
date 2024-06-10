@@ -1,30 +1,64 @@
-import 'dart:ffi';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CartModel {
-  CartModel({
+class CartDetails {
+  CartDetails({
     required this.qty,
-    required this.invId,
-    required this.totalPrice
+    required this.name,
+    required this.price
   });
 
-  CartModel.fromJson(Map<String, Object?> json)
+  CartDetails.fromJson(Map<String, Object?> json)
       : this(
-      qty: json['qty']! as Int,
-      invId: json['invId']! as String,
-      totalPrice: json['totalPrice']! as Float
+      qty: json['qty']! as int,
+      name: json['name']! as String,
+      price: json['price']! as int
   );
 
-  final Int qty;
-  final String invId;
-  final Float totalPrice;
+  final int qty;
+  final String name;
+  final int price;
+
+  CollectionReference cartInstance = FirebaseFirestore.instance.collection("cart");
 
 
 
   Map<String, Object?> toJson() {
     return {
       'qty': qty,
-      'invId': invId,
-      'totalPrice': totalPrice
+      'name': name,
+      'price': price
     };
+  }
+}
+
+class CartModel {
+  CartModel({
+    required this.details,
+    required this.cartTotal
+  });
+
+  CartModel.fromJson(Map<String, Object?> json)
+      : this(
+      details: json['details']! as List<CartDetails>,
+      cartTotal: json['cartTotal']! as int
+  );
+
+  final List<CartDetails> details;
+  final int cartTotal;
+
+  CollectionReference cartInstance = FirebaseFirestore.instance.collection("cart");
+
+
+
+  Map<String, Object?> toJson() {
+    return {
+      'details': details.map((e) => e.toJson()).toList(),
+      'cartTotal': cartTotal,
+    };
+  }
+
+  Future<bool> setObject(phoneNum) {
+    return cartInstance.doc(phoneNum).set(toJson()).then((value) =>  true)
+        .catchError((error) => false);
   }
 }

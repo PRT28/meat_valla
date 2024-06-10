@@ -60,7 +60,27 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/bglogin.jpg
+  branding: assets/bglogin.jpg
+  color_dark: "#121212"
+  image_dark: assets/bglogin.jpg
+  branding_dark: assets/bglogin.jpg
+
+  android_12:
+    image: assets/bglogin.jpg
+
+    icon_background_color: "#ffffff"
+    image_dark: assets/bglogin.jpg
+    icon_background_color_dark: "#121212"
+
+  web: false
+
+
 flutter:
+  assets:
+    - assets/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
