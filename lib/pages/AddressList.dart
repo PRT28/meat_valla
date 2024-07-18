@@ -1,5 +1,3 @@
-import "dart:html";
-
 import "package:flutter/material.dart";
 import "package:meat_delivery/components/Button.dart";
 import "package:meat_delivery/pages/Address.dart";
