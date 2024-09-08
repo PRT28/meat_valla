@@ -1,4 +1,4 @@
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart' as slider_controller;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/ClickCard.dart';
@@ -89,30 +89,30 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(
                         height: 15,
                       ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width,
-                        child: TextField(
-                          onSubmitted: (s) {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => PLP(title: s)));
-                          },
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.search),
-                            filled: true,
-                            fillColor: Color(0xFFF1F0F5),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                borderSide: BorderSide(width: 0, style: BorderStyle.none)
-                            ),
-                            hintText: 'Enter a search term',
-
-                          ),
-                        ),
-                      ),
+                      // SizedBox(
+                      //   width: MediaQuery.of(context).size.width,
+                      //   child: TextField(
+                      //     onSubmitted: (s) {
+                      //       Navigator.push(context, MaterialPageRoute(builder: (context) => PLP(title: s)));
+                      //     },
+                      //     decoration: const InputDecoration(
+                      //       prefixIcon: Icon(Icons.search),
+                      //       filled: true,
+                      //       fillColor: Color(0xFFF1F0F5),
+                      //       border: OutlineInputBorder(
+                      //           borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                      //           borderSide: BorderSide(width: 0, style: BorderStyle.none)
+                      //       ),
+                      //       hintText: 'Enter a search term',
+                      //
+                      //     ),
+                      //   ),
+                      // ),
                       const SizedBox(
                         height: 10,
                       ),
                       banner.isEmpty ? const SizedBox.shrink() :
-                      CarouselSlider(
+                      slider_controller.CarouselSlider(
                           items: banner.map((e) {
                             var data = e.data() as Map<String, dynamic>;
                             return Container(
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           }).toList(),
-                          options: CarouselOptions(
+                          options: slider_controller.CarouselOptions(
                             height: 180.0,
                             enlargeCenterPage: true,
                             autoPlay: true,
@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       SizedBox(
-                        height: 350,
+                        height: 650,
                         width: 500,
                         child: GridView.count(
                           shrinkWrap: true,
