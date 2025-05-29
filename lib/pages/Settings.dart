@@ -19,6 +19,8 @@ class _SettingsState extends State<Settings> {
 
   String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
 
+  String? email = FirebaseAuth.instance.currentUser?.email;
+
 
   logoutHandle() async {
     await FirebaseAuth.instance.signOut().whenComplete(() {
@@ -61,7 +63,7 @@ class _SettingsState extends State<Settings> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text("${phone?.substring(3)}",
+                        Text("${email?.split('@')[0]}",
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700

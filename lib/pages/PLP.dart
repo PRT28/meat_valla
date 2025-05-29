@@ -15,7 +15,7 @@ class PLP extends StatefulWidget {
 }
 
 class _PLPState extends State<PLP> {
-  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
   Future<Map<String, dynamic>> fetchData() async {
     var inventory = await FirebaseFirestore
@@ -26,7 +26,7 @@ class _PLPState extends State<PLP> {
 
     var favourite = await FirebaseFirestore.instance
         .collection("favourites")
-        .doc(phone?.substring(3))
+        .doc(email)
         .get();
 
     return {
@@ -85,7 +85,7 @@ class _PLPState extends State<PLP> {
                                 favourites.add(data);
                               }
                               favourite?['list'] = favourites;
-                              FirebaseFirestore.instance.collection('favourites').doc(phone?.substring(3)).set(favourite ?? {});
+                              FirebaseFirestore.instance.collection('favourites').doc(email).set(favourite ?? {});
                             },
                           );
                         }).toList()

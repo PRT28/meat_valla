@@ -78,15 +78,15 @@ class AddressList extends StatefulWidget {
 class _AddressListState extends State<AddressList> {
 
 
-  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
-  int _selected = 1;
+  int _selected = 0;
 
   setSelected(id) async {
-    var address = await FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
+    var address = await FirebaseFirestore.instance.collection('address').doc(email).get();
     var data = address.data();
     data?['selected'] = id;
-    FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).set(data!, SetOptions(merge: true)).then((value) {
+    FirebaseFirestore.instance.collection('address').doc(email).set(data!, SetOptions(merge: true)).then((value) {
       setState(() {
         _selected = id;
       });
@@ -102,25 +102,25 @@ class _AddressListState extends State<AddressList> {
       DocumentSnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
                                               .instance
                                               .collection('address')
-                                              .doc(phone?.substring(3))
+                                              .doc(email)
                                               .get();
       return querySnapshot;
     }
 
     placeOrder() async {
-      var cart = FirebaseFirestore.instance.collection('cart').doc(phone?.substring(3)).get();
-      var address = FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
+      var cart = FirebaseFirestore.instance.collection('cart').doc(email).get();
+      var address = FirebaseFirestore.instance.collection('address').doc(email).get();
       var results = await Future.wait([cart, address]);
       if (widget.isOrder) {
         Orders order = Orders(
             status: Status.confirmed.toString(),
             orderDetails: results[0]['details'],
             address: results[1]['list'][results[1]['selected']],
-            user: phone!.substring(3).toString(),
+            user: email.toString(),
             total: results[0]['cartTotal']
         );
         order.setObject().then((value) async {
-          await FirebaseFirestore.instance.collection('cart').doc(phone?.substring(3)).delete().then((e) {
+          await FirebaseFirestore.instance.collection('cart').doc(email).delete().then((e) {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderSuccess()));
           });
         });
@@ -145,12 +145,6 @@ class _AddressListState extends State<AddressList> {
         return const Center(child: CircularProgressIndicator());
       } else if (snapshot.hasError) {
         return Center(child: Text('Error: ${snapshot.error}'));
-      } else if (!snapshot.hasData || !snapshot.data!.exists) {
-        // Show a message if no data is found
-        print(!snapshot.hasData);
-        print(snapshot.data!.exists);
-        print(!snapshot.hasData || !snapshot.data!.exists);
-        return const Center(child: Text('No Data Found'));
       } else {
 
         DocumentSnapshot<Map<String, dynamic>> address = snapshot.data!;
@@ -159,7 +153,7 @@ class _AddressListState extends State<AddressList> {
         //   _selected = address['selected'];
         // });
 
-        List<dynamic> addressList = address['list'];
+        List<dynamic> addressList = address.exists ? address['list'] : [];
 
         return SafeArea(
           child: Padding(
@@ -210,7 +204,7 @@ class _AddressListState extends State<AddressList> {
 
 
 
-                  addressList.length < 3 ? TextButton.icon(
+                  TextButton.icon(
                       onPressed: () {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => const Address(title: null)));
                       },
@@ -221,7 +215,7 @@ class _AddressListState extends State<AddressList> {
                             fontSize: 15
                         ),
                       )
-                  ) : const SizedBox.shrink()
+                  )
                 ],
               ),
             ),

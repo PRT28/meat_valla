@@ -4,10 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meat_delivery/components/Button.dart';
-import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'package:meat_delivery/models/Users.dart';
-import 'package:meat_delivery/pages/Base.dart';
-import 'dart:developer';
+import 'package:meat_delivery/pages/Register.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -20,7 +17,8 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
   late Animation<Offset> _slideAnimation;
-  TextEditingController phoneController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   String verifyId = "";
   String otp = "";
 
@@ -56,59 +54,28 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  bool _phoneEntered = false;
-
   bool _isLoading = false;
 
   buttonHandle () async {
     print("Button is clicked");
-    if (!_phoneEntered) {
-
-      setState(() {
-        _isLoading = true;
-      });
-
-      await FirebaseAuth.instance.verifyPhoneNumber(
-          verificationCompleted: (PhoneAuthCredential credential) {
-
-          },
-          verificationFailed: (FirebaseAuthException ex) {},
-          codeSent: (String verificationId, int? resendtoken) {
-            print("Code sent success");
-            setState(() {
-              _isLoading = false;
-              _phoneEntered = true;
-              verifyId = verificationId;
-            });
-          },
-          codeAutoRetrievalTimeout: (String verificationId) {},
-          phoneNumber: "+91${phoneController.text}"
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text
       );
 
 
-    } else {
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _isLoading = true;
+        _isLoading = false;
       });
-      try {
-        PhoneAuthCredential credential = await PhoneAuthProvider.credential(
-            verificationId: verifyId, smsCode: otp
-        );
-        FirebaseAuth.instance.signInWithCredential(credential)
-          .then((value) {
-          setState(() {
-            _isLoading = false;
-          });
-
-          Users user = Users(name: '', dob: DateTime(2000), gender: '');
-          user.setObject(phoneController.toString());
-           Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Base()), (Route<dynamic> route) => false);
-        });
-      } catch(ex) {
-        setState(() {
-          _isLoading = false;
-        });
-        log(ex.toString());
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
       }
     }
   }
@@ -116,7 +83,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFDFA),
+      backgroundColor: const Color(0xFF000000),
       body: SafeArea(
           child: DecoratedBox(
             decoration: const BoxDecoration(
@@ -150,7 +117,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             )
                         )
                     ),
-                    height: 300,
+                    height: 420,
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
@@ -183,16 +150,20 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                           height: 20,
                         ),
 
-                          !_phoneEntered ? TextField(
-                            controller: phoneController,
-                            keyboardType: TextInputType.phone,
+                          const SizedBox(
+                            height: 10,
+                          ),
+
+                          TextField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
-                                labelText: "Phone Number",
+                                labelText: "Email ID",
                               labelStyle: const TextStyle(
                                 color: Colors.white
                               ),
-                              prefixIcon: const Icon(Icons.phone, color: Colors.white,),
+                              prefixIcon: const Icon(Icons.email_outlined, color: Colors.white,),
                               border: OutlineInputBorder(
                                 borderSide: const BorderSide(color: Colors.white, width: 2.0),
                                 borderRadius: BorderRadius.circular(12.0),
@@ -202,48 +173,32 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
                             ),
-                          ) : const SizedBox.shrink(),
-
-                         _phoneEntered ?
-                           const Text("Enter OTP",
-                             textAlign: TextAlign.left,
-                             style: TextStyle(
-                               color: Colors.white,
-                               fontSize: 18,
-                               fontWeight: FontWeight.w400,
-                               fontFamily: "Poppins",
-                             ),) : const SizedBox.shrink(),
+                          ),
 
                           const SizedBox(
                              height: 8,
                            ),
 
-                          _phoneEntered ? OtpTextField(
-                             numberOfFields: 6,
-                             showFieldAsBox: true,
-                             borderWidth: 2.0,
-                             hasCustomInputDecoration: true,
-                             textStyle: const TextStyle(
-                               color: Colors.white
-                             ),
-                             borderRadius: BorderRadius.circular(12),
-                             decoration: InputDecoration(
-                               counterText: "",
-                               border: OutlineInputBorder(
-                                 borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                                 borderRadius: BorderRadius.circular(12.0),
-                               ),
-                               focusedBorder:OutlineInputBorder(
-                                 borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                                 borderRadius: BorderRadius.circular(12.0),
-                               ),
-                             ),
-                             onSubmit: (String verificationCode) {
-                               setState(() {
-                                 otp = verificationCode;
-                               });
-                             },
-                           ): SizedBox.shrink(),
+                          TextField(
+                            controller: passwordController,
+                            keyboardType: TextInputType.visiblePassword,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: "Password",
+                              labelStyle: const TextStyle(
+                                  color: Colors.white
+                              ),
+                              prefixIcon: const Icon(Icons.password_outlined, color: Colors.white,),
+                              border: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.white, width: 2.0),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder:OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.white, width: 2.0),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          ),
 
 
 
@@ -257,7 +212,21 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                           ) :
                           Button(
                             onClick: buttonHandle,
-                            label: _phoneEntered ? "Confirm OTP" : "Send OTP"
+                            label: "Login"
+                          ),
+
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          
+                          TextButton(
+                              onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => Register()))}, 
+                              child: const Text(
+                                  "Are you new user??",
+                                style: TextStyle(
+                                  color: Colors.white
+                                ),
+                              )
                           )
 
                         ],

@@ -11,12 +11,12 @@ class OrderHistory extends StatefulWidget {
 }
 
 class _OrderHistoryState extends State<OrderHistory> {
-  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
   Future<List<DocumentSnapshot>> fetchData() async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('orders')
-        .where('user', isEqualTo: phone!.substring(3))
+        .where('user', isEqualTo: email)
         .get();
     return querySnapshot.docs;
   }

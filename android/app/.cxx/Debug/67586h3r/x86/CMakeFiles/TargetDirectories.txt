@@ -1,0 +1,2 @@
+D:/Projects/meat_valla/android/app/.cxx/Debug/67586h3r/x86/CMakeFiles/edit_cache.dir
+D:/Projects/meat_valla/android/app/.cxx/Debug/67586h3r/x86/CMakeFiles/rebuild_cache.dir

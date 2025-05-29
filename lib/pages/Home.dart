@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   String? name = FirebaseAuth.instance.currentUser?.displayName;
-  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Text(
-                            "Hi, ${phone?.substring(3)}",
+                            "Hi, ${email?.split('@')[0]}",
                             style: const TextStyle(
                                 fontSize: 24,
                                 fontFamily: "Poppins",

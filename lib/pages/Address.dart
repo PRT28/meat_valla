@@ -29,23 +29,38 @@ class _AddressState extends State<Address> {
   @override
   Widget build(BuildContext context) {
 
-    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+    String? email = FirebaseAuth.instance.currentUser?.email;
 
     saveAddress() async {
-      var address = await FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).get();
-      var data = address.data();
-      List<dynamic> addressList = data?['list'];
-      if (widget.title == null) {
-        addressList.add(addressController.text.toString().trim());
-      } else {
-        int index = addressList.indexOf(widget.title);
-        addressList[index] = addressController.text.toString().trim();
+      var docRef = FirebaseFirestore.instance.collection('address').doc(email);
+      var addressSnapshot = await docRef.get();
+
+      Map<String, dynamic> data = {};
+      List<dynamic> addressList = [];
+
+      if (addressSnapshot.exists) {
+        data = addressSnapshot.data()!;
+        addressList = List.from(data['list'] ?? []);
       }
-      data?['list'] = addressList;
-      FirebaseFirestore.instance.collection('address').doc(phone?.substring(3)).set(data!, SetOptions(merge: true)).then((value) {
+
+      String newAddress = addressController.text.toString().trim();
+
+      if (widget.title == null) {
+        // Adding new address
+        addressList.add(newAddress);
+      } else {
+        // Editing existing address
+        int index = addressList.indexOf(widget.title);
+        if (index != -1) {
+          addressList[index] = newAddress;
+        }
+      }
+
+      data['list'] = addressList;
+
+      await docRef.set(data, SetOptions(merge: true)).then((_) {
         Navigator.of(context).pop();
       });
-
     }
     
     return Scaffold(

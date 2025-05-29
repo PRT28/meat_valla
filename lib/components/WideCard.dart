@@ -66,10 +66,10 @@ class WideCard extends StatelessWidget {
                   icon: const Icon(Icons.replay),
               ) : const SizedBox.shrink(),
 
-              showFav ? FavoriteButton(
+              FavoriteButton(
                   iconSize: 36,
                   isFavorite: showFav,
-                  valueChanged: showFavClick) : const SizedBox.shrink(),
+                  valueChanged: showFavClick),
             ],
           ),
         ),

@@ -125,13 +125,13 @@ class _PDPState extends State<PDP> {
 
               !isAdded ? Button(
                   onClick: () async {
-                    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
-                    if (phone == null) {
+                    String? email = FirebaseAuth.instance.currentUser?.email;
+                    if (email == null) {
                       print('User not logged in');
                       return;
                     }
 
-                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(phone).get();
+                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(email).get();
 
                     if (!cart.exists || cart.data() == null || cart.data()!.isEmpty) {
                       CartDetails cartDetails = CartDetails(
@@ -143,7 +143,7 @@ class _PDPState extends State<PDP> {
                         details: [cartDetails],
                         cartTotal: (widget.data['price'] * _countItem),
                       );
-                      cartModel.setObject(phone.substring(3)).then((value) {
+                      cartModel.setObject(email).then((value) {
                         setState(() {
                           isAdded = true;
                         });
@@ -167,7 +167,7 @@ class _PDPState extends State<PDP> {
                       data['cartTotal'] = (data['cartTotal'] ?? 0) + (widget.data['price'] * _countItem);
 
                       // Update Firestore with the new cart data
-                      await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).set(data).then((value) {
+                      await FirebaseFirestore.instance.collection('cart').doc(email).set(data).then((value) {
                         setState(() {
                           isAdded = true;
                         });
@@ -180,12 +180,12 @@ class _PDPState extends State<PDP> {
 
               isAdded ? Button(
                   onClick: () async {
-                    String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
-                    if (phone == null) {
+                    String? email = FirebaseAuth.instance.currentUser?.email;
+                    if (email == null) {
                       print('User not logged in');
                       return;
                     }
-                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).get();
+                    DocumentSnapshot<Map<String, dynamic>> cart = await FirebaseFirestore.instance.collection('cart').doc(email).get();
 
                     if (!cart.exists || cart.data() == null || cart.data()!.isEmpty) {
                       // Logic to display somthing went wrong
@@ -202,7 +202,7 @@ class _PDPState extends State<PDP> {
                       data['cartTotal'] = (data['cartTotal'] ?? 0) - (widget.data['price'] * _countItem);
 
                       // Update Firestore with the new cart data
-                      await FirebaseFirestore.instance.collection('cart').doc(phone.substring(3)).set(data).then((value) {
+                      await FirebaseFirestore.instance.collection('cart').doc(email).set(data).then((value) {
                         setState(() {
                           isAdded = false;
                         });

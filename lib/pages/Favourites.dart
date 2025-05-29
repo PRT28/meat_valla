@@ -14,7 +14,7 @@ class Favourites extends StatefulWidget {
 }
 
 class _PLPState extends State<Favourites> {
-  String? phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
   Future<bool> update(
       Map<String, dynamic> data, List<DocumentSnapshot<Inventory?>> favourites, String id) {
@@ -24,7 +24,7 @@ class _PLPState extends State<Favourites> {
       dob: data['dob'],
       gender: data['gender'],
     );
-    return user.setObject(phone);
+    return user.setObject(email);
   }
 
   @override
@@ -40,7 +40,7 @@ class _PLPState extends State<Favourites> {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection("favourites")
-            .doc(phone?.substring(3))
+            .doc(email)
             .snapshots(),
         builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> streamSnapshot) {
           if (streamSnapshot.connectionState == ConnectionState.waiting) {
@@ -85,7 +85,7 @@ class _PLPState extends State<Favourites> {
                           favourites.add(data);
                         }
                         favInst?['list'] = favourites;
-                        FirebaseFirestore.instance.collection('favourites').doc(phone?.substring(3)).set(favInst!);
+                        FirebaseFirestore.instance.collection('favourites').doc(email).set(favInst!);
                         // print(data);
                         // print('_Fav Value: ${_isFav}');
                       },
