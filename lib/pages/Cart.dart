@@ -26,6 +26,35 @@ class _CartState extends State<Cart> {
     };
   }
 
+  Future<void> removeFromCart(int index) async {
+    if (email == null) return;
+
+    final cartRef = FirebaseFirestore.instance.collection('cart').doc(email);
+    final cartSnapshot = await cartRef.get();
+
+    if (!cartSnapshot.exists || cartSnapshot.data() == null) return;
+
+    var data = cartSnapshot.data()!;
+    List<dynamic> details = List.from(data['details'] ?? []);
+    double cartTotal = (data['cartTotal'] ?? 0).toDouble();
+
+    if (index >= details.length) return;
+
+    var removedItem = details.removeAt(index);
+    double removedItemTotal =
+        ((removedItem['price'] ?? 0) as num).toDouble() *
+            ((removedItem['qty'] ?? 1) as num).toDouble();
+    cartTotal -= removedItemTotal;
+
+    await cartRef.set({
+      'details': details,
+      'cartTotal': cartTotal < 0 ? 0 : cartTotal,
+    });
+
+    setState(() {}); // Refresh UI
+  }
+
+
   Future<void> placeOrder(DocumentSnapshot cart, DocumentSnapshot address) async {
     if (!(cart.exists && address.exists)) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressList(isOrder: true)));
@@ -48,7 +77,11 @@ class _CartState extends State<Cart> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDFA),
       appBar: AppBar(
-        title: const Text("Cart", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [],
+        title: const Text("Shopping Cart", style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold)),
+        centerTitle: true,
       ),
       body: FutureBuilder<Map<String, DocumentSnapshot<Map<String, dynamic>>>>(
         future: fetchData(),
@@ -73,105 +106,90 @@ class _CartState extends State<Cart> {
               );
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: SafeArea(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: MediaQuery.of(context).size.width,
-                        maxWidth: MediaQuery.of(context).size.width,
-                        minHeight: 250,
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black,
-                              blurRadius: 2.0,
-                              offset: Offset(0, 2),
-                            )
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              const Text(
-                                "Order Details",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: 20),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: cartDetailsList.map((e) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('${e['name']}',
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text('Qty: ${e['qty']}'),
-                                            Text('₹${e['price']}'),
-                                          ],
-                                        )
-                                      ],
+            return SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      separatorBuilder: (_, __) => const Divider(height: 32),
+                      itemCount: cartDetailsList.length,
+                      itemBuilder: (context, index) {
+                        var item = cartDetailsList[index];
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: const Color(0xFF6E1F1F), width: 1), // Customize color & width
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      item['img'] ?? '',
+                                      height: 60,
+                                      width: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 60),
                                     ),
-                                  );
-                                }).toList(),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text('Quantity:', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                          Text(item['qty'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                                          const SizedBox(
+                                            width: 20,
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, color: const Color(0xFF6E1F1F)),
+                                            onPressed: () => removeFromCart(index),
+                                            padding: EdgeInsets.zero,
+                                            splashRadius: 20, // optional: controls ripple size
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("₹${item['price']}", style: const TextStyle(fontWeight: FontWeight.bold))
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                    const SizedBox(height: 30),
-                    const Text("Address:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    Row(
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 220,
-                          child: Text(
-                            address.exists ? address['list'][address['selected']] : 'No Address Found',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressList(isOrder: true)));
-                          },
-                          icon: const Icon(Icons.edit, size: 18),
-                          label: const Text(
-                            "Change",
-                            style: TextStyle(color: Colors.black, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        const Text("Total Cost:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                      children: [
+                        const Text("Total", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                         Text("₹${cart.exists ? cart['cartTotal'] : '0'}",
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                       ],
                     ),
-                    const SizedBox(height: 30),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }
@@ -194,7 +212,7 @@ class _CartState extends State<Cart> {
           return Padding(
             padding: const EdgeInsets.all(12.0),
             child: Button(
-              label: "Place Order",
+              label: "Checkout",
               onClick: () => placeOrder(cartDoc!, addressDoc!),
               disable: isCartEmpty,
             ),

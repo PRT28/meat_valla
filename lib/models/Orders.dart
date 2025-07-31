@@ -12,7 +12,7 @@ class Orders {
   final List<dynamic> orderDetails;
   final String address;
   final String user;
-  final int total;
+  final double total;
 
   Orders({
     required this.status,
@@ -28,7 +28,7 @@ class Orders {
       orderDetails: json['orderDetails']! as List<dynamic>,
       address: json['address']! as String,
       user: json['user']! as String,
-    total: json['total']! as int
+    total: json['total']! as double
   );
 
   CollectionReference userInstance = FirebaseFirestore.instance.collection("orders");

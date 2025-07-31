@@ -32,10 +32,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
               icon: Icon(Icons.shopping_cart), label: 'Cart', backgroundColor: Colors.red),
         ],
         unselectedItemColor: Colors.grey,
-        selectedItemColor: const Color(0xFF850E35),
+        selectedItemColor: Colors.white,
         showUnselectedLabels: true,
         currentIndex: widget.selectedIndex,
-        backgroundColor: const Color(0xFFFFF7F4),
+        backgroundColor: const Color(0xFF6E1F1F),
         onTap: widget.onItemTapped,
       ),
     );

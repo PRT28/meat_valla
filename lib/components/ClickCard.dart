@@ -18,7 +18,7 @@ class ClickCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      splashColor: Color(0xFF850E35),
+      splashColor: Color(0xFF6E1F1F),
       borderRadius: BorderRadius.circular(10),
       onTap: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => PLP(title: text)))},
       child: Container(
@@ -26,8 +26,8 @@ class ClickCard extends StatelessWidget {
         width: 160,
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
-            color: Colors.white60,
-            borderRadius: BorderRadius.circular(10),
+            color: Color(0xFF6E1F1F),
+            borderRadius: BorderRadius.circular(12),
           border: const BorderDirectional(
             top: BorderSide(
               color: Colors.black12
@@ -47,13 +47,23 @@ class ClickCard extends StatelessWidget {
           children: [
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-              child: Image(image: NetworkImage(this.imageLink)),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  height: 120, // Increased image height
+                  width: double.infinity,
+                  child: Image.network(
+                    imageLink,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
             Container(
               height: 20,
               child: Center(
-                child: Text(this.text),
+                child: Text(this.text, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
 

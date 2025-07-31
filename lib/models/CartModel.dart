@@ -4,19 +4,22 @@ class CartDetails {
   CartDetails({
     required this.qty,
     required this.name,
-    required this.price
+    required this.price,
+    required this.img
   });
 
   CartDetails.fromJson(Map<String, Object?> json)
       : this(
       qty: json['qty']! as int,
       name: json['name']! as String,
-      price: json['price']! as int
+      price: json['price']! as int,
+      img: json['img']! as String
   );
 
   final int qty;
   final String name;
   final int price;
+  final String img;
 
   CollectionReference cartInstance = FirebaseFirestore.instance.collection("cart");
 
@@ -26,7 +29,8 @@ class CartDetails {
     return {
       'qty': qty,
       'name': name,
-      'price': price
+      'price': price,
+      'img': img
     };
   }
 }

@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:meat_delivery/components/Button.dart';
 import 'package:meat_delivery/pages/EditProfile.dart';
 import 'package:meat_delivery/pages/Login.dart';
 
@@ -59,6 +58,17 @@ class _RegisterState extends State<Register> with SingleTickerProviderStateMixin
 
   bool _isLoading = false;
 
+  showSnackBar(BuildContext context, String message, {Color bgColor = Colors.black}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   buttonHandle () async {
     print("Button is clicked");
     setState(() {
@@ -78,9 +88,9 @@ class _RegisterState extends State<Register> with SingleTickerProviderStateMixin
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
+        this.showSnackBar(context, 'The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
+        this.showSnackBar(context, 'The account already exists for that email.');
       }
       setState(() {
         _isLoading = false;
@@ -96,168 +106,119 @@ class _RegisterState extends State<Register> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      body: SafeArea(
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            image: DecorationImage(image: AssetImage("assets/bglogin.jpg"), fit: BoxFit.cover),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      color: const Color(0x00FFFFFF),
-                      border: const BorderDirectional(
-                          top: BorderSide(
-                              width: 3,
-                              color: Colors.white
-                          ),
-                          bottom: BorderSide(
-                              width: 3,
-                              color: Colors.white
-                          ),
-                          start: BorderSide(
-                              width: 3,
-                              color: Colors.white
-                          ),
-                          end: BorderSide(
-                              width: 3,
-                              color: Colors.white
-                          )
-                      )
-                  ),
-                  height: 420,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        FadeTransition(
-                          opacity: _opacityAnimation,
-                          child: SlideTransition(
-                            position: _slideAnimation,
-                            child: Container(
-                              width: 300,
-                              height: 100,
-                              child: const Center(
-                                child: Text("Meat Wala",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: "Poppins"
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 20,
-                        ),
-
-                        const Text(
-                          'Register yourself',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16
-                          ),),
-
-                        const SizedBox(
-                          height: 10,
-                        ),
-
-                        TextField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Email ID",
-                            labelStyle: const TextStyle(
-                                color: Colors.white
-                            ),
-                            prefixIcon: const Icon(Icons.email_outlined, color: Colors.white,),
-                            border: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder:OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        TextField(
-                          controller: passwordController,
-                          keyboardType: TextInputType.visiblePassword,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Password",
-                            labelStyle: const TextStyle(
-                                color: Colors.white
-                            ),
-                            prefixIcon: const Icon(Icons.password_outlined, color: Colors.white,),
-                            border: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder:OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white, width: 2.0),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                        ),
-
-
-
-                        const SizedBox(
-                          height: 10,
-                        ),
-
-
-                        _isLoading ? const CupertinoActivityIndicator(
-                            radius: 20.0, color: Colors.white
-                        ) :
-                        Button(
-                            onClick: buttonHandle,
-                            label: "Register"
-                        ),
-
-                        const SizedBox(
-                          height: 10,
-                        ),
-
-                        TextButton(
-                            onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => Login()))},
-                            child: const Text(
-                              "Login into current account!!",
-                              style: TextStyle(
-                                  color: Colors.white
-                              ),
-                            )
-                        )
-
-                      ],
-                    ),
+      backgroundColor: const Color(0xFF6E1F1F),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Top image with rounded corners
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/bglogin.jpg',
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6E1F1F),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    children: [
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: const Text(
+                            "Meat Wala",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Register yourself',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: emailController,
+                        style: const TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: "Email address",
+                          hintStyle: const TextStyle(color: Colors.white70),
+                          prefixIcon: const Icon(Icons.email_outlined, color: Colors.white),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: "Password",
+                          hintStyle: const TextStyle(color: Colors.white70),
+                          prefixIcon: const Icon(Icons.lock_outline, color: Colors.white),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _isLoading
+                          ? const CupertinoActivityIndicator(color: Colors.white, radius: 16)
+                          : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                            backgroundColor: const Color(0xFFE53935), // red button
+                          ),
+                          onPressed: buttonHandle,
+                          child: const Text("REGISTER", style: TextStyle(fontSize: 16, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => Navigator.push(
+                            context, MaterialPageRoute(builder: (_) => const Login())),
+                        child: const Text(
+                          "Login into current account!!",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+
 }

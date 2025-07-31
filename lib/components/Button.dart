@@ -5,12 +5,16 @@ class Button extends StatelessWidget {
   final VoidCallback onClick;
   final String label;
   final bool disable;
+  final int bgColor;
+  final int fontColor;
 
   const Button({
     super.key,
     required this.onClick,
     required this.label,
-    this.disable = false
+    this.disable = false,
+    this.bgColor = 0xFF850E35,
+    this.fontColor = 0xFFFFFFFF
   });
 
 
@@ -24,12 +28,12 @@ class Button extends StatelessWidget {
         width: 120,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Color(disable ? 0xFFD3AFBB : 0xFF850E35)
+          color: Color(disable ? 0xFFD3AFBB : bgColor)
         ),
         child: Center(
           child: Text(label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color:  Color(fontColor),
             fontSize: 16,
             fontWeight: FontWeight.w600
           ),),

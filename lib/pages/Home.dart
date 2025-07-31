@@ -120,8 +120,12 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Image(
-                                  image: NetworkImage(data['url'])
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12), // Set your desired radius
+                                child: Image(
+                                  image: NetworkImage(data['url']),
+                                  fit: BoxFit.cover, // Optional: covers entire container
+                                ),
                               ),
                             );
                           }).toList(),
