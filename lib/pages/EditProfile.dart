@@ -229,11 +229,13 @@ class _EditProfileState extends State<EditProfile> {
                       'dob': _selectedDate,
                     }, SetOptions(merge: true));
                     if (widget.isOnboarding) {
-                      MaterialPageRoute(builder: (context) => const Base());
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const Base()),
+                            (Route<dynamic> route) => false, // Removes all previous routes
+                      );
                     } else {
                       Navigator.of(context).pop();
                     }
-
                   },
                   label: "Save",
                 ),

@@ -12,13 +12,13 @@ class CartDetails {
       : this(
       qty: json['qty']! as int,
       name: json['name']! as String,
-      price: json['price']! as int,
+      price: json['price']! as double,
       img: json['img']! as String
   );
 
   final int qty;
   final String name;
-  final int price;
+  final double price;
   final String img;
 
   CollectionReference cartInstance = FirebaseFirestore.instance.collection("cart");
@@ -44,11 +44,11 @@ class CartModel {
   CartModel.fromJson(Map<String, Object?> json)
       : this(
       details: json['details']! as List<CartDetails>,
-      cartTotal: json['cartTotal']! as int
+      cartTotal: json['cartTotal']! as double
   );
 
   final List<CartDetails> details;
-  final int cartTotal;
+  final double cartTotal;
 
   CollectionReference cartInstance = FirebaseFirestore.instance.collection("cart");
 

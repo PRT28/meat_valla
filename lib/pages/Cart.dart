@@ -59,6 +59,7 @@ class _CartState extends State<Cart> {
     if (!(cart.exists && address.exists)) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressList(isOrder: true)));
     } else {
+      print( cart['cartTotal'].runtimeType);
       Orders order = Orders(
         status: Status.confirmed.toString(),
         orderDetails: cart['details'] ?? [],

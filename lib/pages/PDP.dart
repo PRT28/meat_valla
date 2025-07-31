@@ -51,136 +51,138 @@ class _PDPState extends State<PDP> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SizedBox.expand(
-        child: Stack(
-          children: [
-            Hero(
-              tag: 'plp-title-${widget.data['name']}',
-              child: Image.network(
-                widget.data['img'],
-                width: double.infinity,
-                height: height * 0.45,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Positioned(
-              top: height * 0.4,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF6E1F1F),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 12),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          const Text(
-                            'Go Back',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        widget.data['name'],
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "\$${widget.data['price']}",
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Quantity selector
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _quantityButton(Icons.remove, () {
-                            if (_countItem > 1) {
-                              setState(() => _countItem--);
-                            }
-                          }),
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 20),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F1F1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text('$_countItem', style: const TextStyle(fontSize: 18)),
-                          ),
-                          _quantityButton(Icons.add, () {
-                            setState(() => _countItem++);
-                          }),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Container(
-                        height: isInCart ? height * 0.18 : height * 0.25,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Nutrition Information",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-                              ),
-                              const SizedBox(height: 8),
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  _NutritionItem(label: 'Calories', value: '165 kcal'),
-                                  _NutritionItem(label: 'Protein', value: '21g'),
-                                  _NutritionItem(label: 'Fat', value: '8g'),
-                                  _NutritionItem(label: 'Carbs', value: '-'),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                "Description",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Text(widget.data['desc'], style: const TextStyle(color: Colors.white),),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-
-                      Button(
-                        onClick: () => isInCart ? _updateCart() : _addToCart(),
-                        label: isInCart ? "Update Quantity" : "Add to Cart",
-                        disable: _countItem == 0,
-                        bgColor: 0xFFFFFFFF,
-                        fontColor: 0xFF6E1F1F,
-                      ),
-                      if (isInCart)
-                        TextButton(
-                          onPressed: _removeFromCart,
-                          child: const Text("Remove from Cart", style: TextStyle(color: Colors.white)),
-                        ),
-                    ],
-                  ),
+      body: SafeArea(
+        child: SizedBox.expand(
+          child: Stack(
+            children: [
+              Hero(
+                tag: 'plp-title-${widget.data['name']}',
+                child: Image.network(
+                  widget.data['img'],
+                  width: double.infinity,
+                  height: height * 0.45,
+                  fit: BoxFit.cover,
                 ),
               ),
-          ],
+              Positioned(
+                top: height * 0.4,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF6E1F1F),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(28),
+                        topRight: Radius.circular(28),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 12),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            const Text(
+                              'Go Back',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          widget.data['name'],
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "\$${widget.data['price']}",
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+        
+                        // Quantity selector
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _quantityButton(Icons.remove, () {
+                              if (_countItem > 1) {
+                                setState(() => _countItem--);
+                              }
+                            }),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F1F1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text('$_countItem', style: const TextStyle(fontSize: 18)),
+                            ),
+                            _quantityButton(Icons.add, () {
+                              setState(() => _countItem++);
+                            }),
+                          ],
+                        ),
+        
+                        const SizedBox(height: 24),
+        
+                        Container(
+                          height: isInCart ? height * 0.18 : height * 0.25,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Nutrition Information",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                                ),
+                                const SizedBox(height: 8),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _NutritionItem(label: 'Calories', value: '165 kcal'),
+                                    _NutritionItem(label: 'Protein', value: '21g'),
+                                    _NutritionItem(label: 'Fat', value: '8g'),
+                                    _NutritionItem(label: 'Carbs', value: '-'),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  "Description",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Text(widget.data['desc'], style: const TextStyle(color: Colors.white),),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+        
+                        Button(
+                          onClick: () => isInCart ? _updateCart() : _addToCart(),
+                          label: isInCart ? "Update Quantity" : "Add to Cart",
+                          disable: _countItem == 0,
+                          bgColor: 0xFFFFFFFF,
+                          fontColor: 0xFF6E1F1F,
+                        ),
+                        if (isInCart)
+                          TextButton(
+                            onPressed: _removeFromCart,
+                            child: const Text("Remove from Cart", style: TextStyle(color: Colors.white)),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -209,17 +211,19 @@ class _PDPState extends State<PDP> {
     final cartRef = FirebaseFirestore.instance.collection('cart').doc(email);
     final cartSnapshot = await cartRef.get();
 
+    final double itemPrice = (widget.data['price'] as num).toDouble();
+
     final newItem = CartDetails(
       qty: _countItem,
       name: widget.data['name'],
-      price: widget.data['price'],
-      img: widget.data['img']
+      price: itemPrice.toDouble(),
+      img: widget.data['img'],
     );
 
     if (!cartSnapshot.exists || cartSnapshot.data() == null) {
       final newCart = CartModel(
         details: [newItem],
-        cartTotal: widget.data['price'] * _countItem,
+        cartTotal: (itemPrice * _countItem).toDouble(),
       );
       await newCart.setObject(email);
     } else {
@@ -228,14 +232,18 @@ class _PDPState extends State<PDP> {
       details.add(newItem.toJson());
 
       cartData['details'] = details;
-      cartData['cartTotal'] = (cartData['cartTotal'] ?? 0) + (widget.data['price'] * _countItem);
+      cartData['cartTotal'] =
+          ((cartData['cartTotal'] ?? 0) as num).toDouble() + itemPrice * _countItem;
 
       await cartRef.set(cartData);
     }
 
     setState(() => isInCart = true);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item added to cart')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Item added to cart')),
+    );
   }
+
 
   Future<void> _updateCart() async {
     String? email = FirebaseAuth.instance.currentUser?.email;
