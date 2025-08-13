@@ -30,9 +30,13 @@ class ProductProvider extends ChangeNotifier {
           .where('isAvailable', isEqualTo: true)
           .get();
 
+      print("Reached Here");
+
       _products = querySnapshot.docs
           .map((doc) => ProductModel.fromMap({...doc.data(), 'id': doc.id}))
           .toList();
+
+      print(_products);
 
       _extractCategories();
       _setLoading(false);

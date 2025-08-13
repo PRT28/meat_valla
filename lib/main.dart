@@ -10,10 +10,13 @@ import 'providers/order_provider.dart';
 import 'providers/address_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_colors.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MeatVallaApp());
 }
 

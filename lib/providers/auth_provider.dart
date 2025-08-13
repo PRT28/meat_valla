@@ -31,6 +31,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _loadUserData(String uid) async {
     try {
+      print(uid);
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
         _user = UserModel.fromMap({...doc.data()!, 'id': uid});
