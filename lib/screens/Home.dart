@@ -45,14 +45,14 @@ class _HomeScreenState extends State<HomeScreen> {
             slivers: [
               // App Bar
               SliverAppBar(
-                expandedHeight: 120,
+                expandedHeight: 90,
                 floating: true,
-                pinned: true,
+                pinned: false,
                 backgroundColor: AppColors.background,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              
+
               // Search Bar
               SliverToBoxAdapter(
                 child: Padding(
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              
+
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
               
               // Featured Products
@@ -248,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     sliver: SliverGrid(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.75,
+                        childAspectRatio: 0.65,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
                       ),
@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-              
+
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),

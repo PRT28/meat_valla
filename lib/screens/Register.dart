@@ -190,10 +190,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a password';
                     }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+
+                    // Regex checks
+                    final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
+                    final lowercaseMatches = RegExp(r'[a-z]').allMatches(value).length;
+                    final digitMatches = RegExp(r'\d').allMatches(value).length;
+
+                    if (!hasUppercase) {
+                      return 'Password must contain at least 1 uppercase letter';
                     }
-                    return null;
+                    if (lowercaseMatches < 3) {
+                      return 'Password must contain at least 3 lowercase letters';
+                    }
+                    if (digitMatches < 4) {
+                      return 'Password must contain at least 4 numbers';
+                    }
+                    if (value.length < 8) {
+                      return 'Password must be at least 8 characters long';
+                    }
+
+                    return null; // valid
                   },
                 ),
                 

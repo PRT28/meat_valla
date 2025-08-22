@@ -32,6 +32,8 @@ class OrderProvider extends ChangeNotifier {
 
       _setLoading(false);
     } catch (e) {
+      print("error on loading orders ${e.toString()}");
+      print(e.toString());
       _setError(e.toString());
       _setLoading(false);
     }
@@ -65,16 +67,18 @@ class OrderProvider extends ChangeNotifier {
         trackingId: _generateTrackingId(),
       );
 
+      print(order);
+
       final docRef = await _firestore.collection('orders').add(order.toMap());
-      
-      // Add to local list
-      final createdOrder = order.copyWith(id: docRef.id);
-      _orders.insert(0, createdOrder);
+
+      _orders.insert(0, order);
       
       _setLoading(false);
       notifyListeners();
       return docRef.id;
     } catch (e) {
+      print("Error in placing order");
+      print(e.toString());
       _setError(e.toString());
       _setLoading(false);
       return null;

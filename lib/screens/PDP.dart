@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/product_model.dart';
 import '../providers/cart_provider.dart';
 import '../providers/product_provider.dart';
@@ -96,21 +98,25 @@ class _PDPScreenState extends State<PDPScreen> {
                       });
                     },
                     itemBuilder: (context, index) {
-                      return Image.network(
-                        widget.product.images[index],
+                      return CachedNetworkImage(
+                        imageUrl: widget.product.images[index],
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.surfaceVariant,
-                            child: const Center(
-                              child: Icon(
-                                Icons.restaurant,
-                                size: 80,
-                                color: AppColors.textLight,
-                              ),
-                            ),
-                          );
-                        },
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: Colors.white,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => const Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            size: 40,
+                            color: AppColors.textLight,
+                          ),
+                        ),
                       );
                     },
                   ),

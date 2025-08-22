@@ -48,20 +48,26 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 3));
-    
-    if (mounted) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
-      if (authProvider.isAuthenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const BaseScreen()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Wait until FirebaseAuth finishes reporting auth state
+    await Future.delayed(const Duration(seconds: 2)); // For animation
+
+    // Give provider time to load user data from Firestore if needed
+    while (authProvider.isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (!mounted) return;
+
+    if (authProvider.isAuthenticated) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const BaseScreen()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     }
   }
 

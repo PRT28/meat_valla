@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ProductModel {
   final String id;
   final String name;
@@ -43,7 +45,9 @@ class ProductModel {
       name: map['name'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
-      originalPrice: map['originalPrice']?.toDouble(),
+      originalPrice: map['originalPrice'] != null
+          ? (map['originalPrice'] as num).toDouble()
+          : null,
       category: map['category'] ?? '',
       images: List<String>.from(map['images'] ?? []),
       unit: map['unit'] ?? 'kg',
@@ -54,10 +58,13 @@ class ProductModel {
       rating: (map['rating'] ?? 0.0).toDouble(),
       reviewCount: map['reviewCount'] ?? 0,
       nutritionInfo: map['nutritionInfo'],
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      updatedAt: map['updatedAt'] != null
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : null,
     );
   }
+
 
   Map<String, dynamic> toMap() {
     return {

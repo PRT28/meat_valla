@@ -15,6 +15,7 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(order.items.toString());
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -89,7 +90,7 @@ class OrderCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${order.itemsCount} items',
+                    '${order.items.length} items',
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,

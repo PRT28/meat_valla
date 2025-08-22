@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_colors.dart';
 import '../widgets/custom_button.dart';
@@ -25,6 +28,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _populateFields();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPath = prefs.getString('profile_image_path');
+    if (savedPath != null) {
+      setState(() {
+        _profileImagePath = savedPath;
+      });
+    }
+  }
+
+  Future<void> _saveProfileImagePath(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_image_path', path);
   }
 
   void _populateFields() {
@@ -61,6 +79,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   setState(() {
                     _profileImagePath = image.path;
                   });
+                  _saveProfileImagePath(image.path); // save path persistently
                 }
               },
             ),
@@ -74,6 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   setState(() {
                     _profileImagePath = image.path;
                   });
+                  _saveProfileImagePath(image.path); // save path persistently
                 }
               },
             ),
@@ -83,24 +103,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       final success = await authProvider.updateProfile(
         name: _nameController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         profileImage: _profileImagePath,
       );
 
-      if (success && mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+      if (success) {
+        if (_profileImagePath != null) {
+          await _saveProfileImagePath(_profileImagePath!); // save after update
+        }
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -153,8 +179,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       width: 100,
                                       height: 100,
                                     )
-                                  : Image.asset(
-                                      _profileImagePath!,
+                                  : Image.file(
+                                      File(_profileImagePath!),
                                       fit: BoxFit.cover,
                                       width: 100,
                                       height: 100,

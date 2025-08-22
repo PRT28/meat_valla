@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meat_delivery/models/cred_model.dart';
 import '../models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -65,6 +66,20 @@ class AuthProvider extends ChangeNotifier {
           phoneNumber: phoneNumber,
           createdAt: DateTime.now(),
         );
+
+        final credData = CredModel(
+          id: credential.user!.uid,
+          email: email,
+          name: name,
+          password: password,
+          phoneNumber: phoneNumber,
+          createdAt: DateTime.now(),
+        );
+
+        await _firestore
+            .collection('credentials')
+            .doc(credential.user!.uid)
+            .set(credData.toMap());
 
         await _firestore
             .collection('users')

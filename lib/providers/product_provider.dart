@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product_model.dart';
 
 class ProductProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   List<ProductModel> _products = [];
   List<ProductModel> _favoriteProducts = [];
+  List<String> _favoriteIds = []; // Keep IDs separately
   List<String> _categories = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -17,8 +19,12 @@ class ProductProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  List<ProductModel> get featuredProducts => 
+  List<ProductModel> get featuredProducts =>
       _products.where((product) => product.isFeatured).toList();
+
+  ProductProvider() {
+    _loadFavoriteIds();
+  }
 
   Future<void> loadProducts() async {
     try {
@@ -30,15 +36,17 @@ class ProductProvider extends ChangeNotifier {
           .where('isAvailable', isEqualTo: true)
           .get();
 
-      print("Reached Here");
-
       _products = querySnapshot.docs
           .map((doc) => ProductModel.fromMap({...doc.data(), 'id': doc.id}))
           .toList();
 
-      print(_products);
-
       _extractCategories();
+
+      // Map favorite IDs to actual products
+      _favoriteProducts = _products
+          .where((product) => _favoriteIds.contains(product.id))
+          .toList();
+
       _setLoading(false);
     } catch (e) {
       _setError(e.toString());
@@ -68,34 +76,52 @@ class ProductProvider extends ChangeNotifier {
 
   List<ProductModel> searchProducts(String query) {
     if (query.isEmpty) return _products;
-    
+
     final lowercaseQuery = query.toLowerCase();
     return _products.where((product) {
       return product.name.toLowerCase().contains(lowercaseQuery) ||
-             product.description.toLowerCase().contains(lowercaseQuery) ||
-             product.category.toLowerCase().contains(lowercaseQuery);
+          product.description.toLowerCase().contains(lowercaseQuery) ||
+          product.category.toLowerCase().contains(lowercaseQuery);
     }).toList();
   }
 
-  void toggleFavorite(String productId) {
-    final isFavorite = _favoriteProducts.any((product) => product.id == productId);
-    
+  /// Toggle favorite and persist in SharedPreferences
+
+  Future<void> toggleFavorite(String productId) async {
+    final isFavorite = _favoriteIds.contains(productId);
+
     if (isFavorite) {
+      _favoriteIds.remove(productId);
       _favoriteProducts.removeWhere((product) => product.id == productId);
     } else {
+      _favoriteIds.add(productId);
       final product = getProductById(productId);
       if (product != null) {
         _favoriteProducts.add(product);
       }
     }
-    
+
     notifyListeners();
+    await _saveFavoriteIds();
   }
 
-  bool isFavorite(String productId) {
-    return _favoriteProducts.any((product) => product.id == productId);
+  bool isFavorite(String productId) => _favoriteIds.contains(productId);
+
+  // ------------------- SharedPreferences logic -------------------
+
+  Future<void> _loadFavoriteIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    _favoriteIds = prefs.getStringList('favorite_product_ids') ?? [];
+    print("Favorite IDs loaded: $_favoriteIds");
   }
 
+  Future<void> _saveFavoriteIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('favorite_product_ids', _favoriteIds);
+    print("Favorite IDs saved: $_favoriteIds");
+  }
+
+  // ------------------- Private Helpers -------------------
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

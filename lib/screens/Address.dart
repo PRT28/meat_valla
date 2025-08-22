@@ -19,14 +19,46 @@ class AddressScreen extends StatefulWidget {
   State<AddressScreen> createState() => _AddressScreenState();
 }
 
+final Map<String, List<String>> indianStatesAndCities = {
+  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur'],
+  'Arunachal Pradesh': ['Itanagar', 'Tawang'],
+  'Assam': ['Guwahati', 'Dibrugarh', 'Silchar'],
+  'Bihar': ['Patna', 'Gaya', 'Muzaffarpur'],
+  'Chhattisgarh': ['Raipur', 'Bhilai', 'Bilaspur'],
+  'Goa': ['Panaji', 'Vasco da Gama', 'Margao'],
+  'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot'],
+  'Haryana': ['Chandigarh', 'Faridabad', 'Gurugram'],
+  'Himachal Pradesh': ['Shimla', 'Manali', 'Dharamshala'],
+  'Jharkhand': ['Ranchi', 'Jamshedpur'],
+  'Karnataka': ['Bengaluru', 'Mysuru', 'Mangalore'],
+  'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode'],
+  'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior'],
+  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur'],
+  'Manipur': ['Imphal'],
+  'Meghalaya': ['Shillong'],
+  'Mizoram': ['Aizawl'],
+  'Nagaland': ['Kohima'],
+  'Odisha': ['Bhubaneswar', 'Cuttack'],
+  'Punjab': ['Chandigarh', 'Amritsar'],
+  'Rajasthan': ['Jaipur', 'Udaipur', 'Jodhpur'],
+  'Sikkim': ['Gangtok'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai'],
+  'Telangana': ['Hyderabad'],
+  'Tripura': ['Agartala'],
+  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi'],
+  'Uttarakhand': ['Dehradun', 'Nainital', 'Haldwani', 'Kashipur', 'Nainital', 'Bhimtal'],
+  'West Bengal': ['Kolkata', 'Howrah', 'Siliguri'],
+};
+
+
 class _AddressScreenState extends State<AddressScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressLine1Controller = TextEditingController();
   final _addressLine2Controller = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
+  String? _selectedState;
+  String? _selectedCity;
   final _pincodeController = TextEditingController();
   final _landmarkController = TextEditingController();
   
@@ -47,8 +79,8 @@ class _AddressScreenState extends State<AddressScreen> {
     _phoneController.text = address.phoneNumber;
     _addressLine1Controller.text = address.addressLine1;
     _addressLine2Controller.text = address.addressLine2;
-    _cityController.text = address.city;
-    _stateController.text = address.state;
+    _selectedCity = address.city;
+    _selectedState = address.state;
     _pincodeController.text = address.pincode;
     _landmarkController.text = address.landmark;
     _selectedType = address.type;
@@ -61,8 +93,8 @@ class _AddressScreenState extends State<AddressScreen> {
     _phoneController.dispose();
     _addressLine1Controller.dispose();
     _addressLine2Controller.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
+    _selectedCity = "";
+    _selectedState = "";
     _pincodeController.dispose();
     _landmarkController.dispose();
     super.dispose();
@@ -82,8 +114,8 @@ class _AddressScreenState extends State<AddressScreen> {
         phoneNumber: _phoneController.text.trim(),
         addressLine1: _addressLine1Controller.text.trim(),
         addressLine2: _addressLine2Controller.text.trim(),
-        city: _cityController.text.trim(),
-        state: _stateController.text.trim(),
+        city: _selectedCity!,
+        state: _selectedState!,
         pincode: _pincodeController.text.trim(),
         landmark: _landmarkController.text.trim(),
         type: _selectedType,
@@ -222,39 +254,61 @@ class _AddressScreenState extends State<AddressScreen> {
               ),
               
               const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _cityController,
-                      label: 'City',
-                      prefixIcon: Icons.location_city_outlined,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter city';
-                        }
-                        return null;
-                      },
-                    ),
+
+                 DropdownButtonFormField<String>(
+                  value: _selectedState,
+                  decoration: const InputDecoration(
+                    labelText: 'State',
+                    prefixIcon: Icon(Icons.map_outlined),
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _stateController,
-                      label: 'State',
-                      prefixIcon: Icons.map_outlined,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter state';
-                        }
-                        return null;
-                      },
+                  items: indianStatesAndCities.keys
+                      .map((state) => DropdownMenuItem(
+                    value: state,
+                    child: SizedBox(
+                        width: 275,
+                        child: Text(state)
                     ),
-                  ),
-                ],
+                  ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedState = value;
+                      _selectedCity = null; // reset city when state changes
+                    });
+                  },
+                  validator: (value) =>
+                  value == null || value.isEmpty ? 'Please select a state' : null,
+                ),
+
+
+              const SizedBox(height: 16),
+
+              DropdownButtonFormField<String>(
+                value: _selectedCity,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  prefixIcon: Icon(Icons.location_city_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                items: _selectedState == null
+                    ? []
+                    : indianStatesAndCities[_selectedState]!
+                    .map((city) => DropdownMenuItem(
+                  value: city,
+                  child: Text(city),
+                ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCity = value;
+                  });
+                },
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Please select a city' : null,
               ),
-              
+
+
               const SizedBox(height: 16),
               
               CustomTextField(

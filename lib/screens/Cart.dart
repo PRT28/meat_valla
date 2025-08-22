@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meat_delivery/providers/order_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/address_provider.dart';
@@ -184,12 +185,27 @@ class _CartScreenState extends State<CartScreen> {
                         
                         // Confirm Button
                         CustomButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
+                          onPressed: () async {
+                            final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+                            final userProvider = Provider.of<AuthProvider>(context, listen: false);
+
+                            final success = await orderProvider.createOrder(
+                                userId: userProvider.user!.id,
+                                items: cartProvider.items,
+                                deliveryAddress: addressProvider.selectedAddress!,
+                                subtotal: cartProvider.subtotal,
+                                deliveryFee: cartProvider.deliveryFee
                             );
-                            cartProvider.clearCart();
+
+                            if (success != null) {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
+                              );
+                              cartProvider.clearCart();
+                            }
+
+
                           },
                           child: const Text('Confirm Order'),
                         ),

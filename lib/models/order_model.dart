@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'cart_model.dart';
 import 'address_model.dart';
 
@@ -35,33 +36,40 @@ class OrderModel {
   });
 
   factory OrderModel.fromMap(Map<String, dynamic> map) {
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is Timestamp) return value.toDate();
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
     return OrderModel(
       id: map['id'] ?? '',
       userId: map['userId'] ?? '',
       items: (map['items'] as List<dynamic>?)
           ?.map((item) => CartItem.fromMap(item))
-          .toList() ?? [],
+          .toList()
+          ?? [],
       deliveryAddress: AddressModel.fromMap(map['deliveryAddress']),
       subtotal: (map['subtotal'] ?? 0.0).toDouble(),
       deliveryFee: (map['deliveryFee'] ?? 0.0).toDouble(),
       total: (map['total'] ?? 0.0).toDouble(),
       status: OrderStatus.values.firstWhere(
-        (e) => e.toString() == 'OrderStatus.${map['status']}',
+            (e) => e.toString() == 'OrderStatus.${map['status']}',
         orElse: () => OrderStatus.placed,
       ),
       paymentMethod: PaymentMethod.values.firstWhere(
-        (e) => e.toString() == 'PaymentMethod.${map['paymentMethod']}',
+            (e) => e.toString() == 'PaymentMethod.${map['paymentMethod']}',
         orElse: () => PaymentMethod.cashOnDelivery,
       ),
-      orderDate: DateTime.parse(map['orderDate']),
-      estimatedDelivery: map['estimatedDelivery'] != null 
-          ? DateTime.parse(map['estimatedDelivery']) : null,
-      deliveredAt: map['deliveredAt'] != null 
-          ? DateTime.parse(map['deliveredAt']) : null,
+      orderDate: parseDate(map['orderDate']) ?? DateTime.now(),
+      estimatedDelivery: parseDate(map['estimatedDelivery']),
+      deliveredAt: parseDate(map['deliveredAt']),
       notes: map['notes'],
       trackingId: map['trackingId'],
     );
   }
+
 
   Map<String, dynamic> toMap() {
     return {

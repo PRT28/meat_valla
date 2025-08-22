@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:meat_delivery/screens/privacy_policy.dart';
+import 'package:meat_delivery/screens/terms_and_conditions.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_colors.dart';
@@ -10,6 +12,7 @@ import 'Favourites.dart';
 import 'SendFeedback.dart';
 import 'About.dart';
 import 'Login.dart';
+import 'dart:io';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -81,21 +84,33 @@ class SettingsScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 30,
                         backgroundColor: AppColors.primary.withOpacity(0.1),
-                        backgroundImage: user?.profileImage != null
-                            ? NetworkImage(user!.profileImage!)
-                            : null,
-                        child: user?.profileImage == null
-                            ? Text(
-                                user?.name.substring(0, 1).toUpperCase() ?? 'U',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
+                        backgroundImage: null, // we'll handle image manually below
+                        child: user?.profileImage != null
+                            ? ClipOval(
+                          child: user!.profileImage!.startsWith('http')
+                              ? Image.network(
+                            user.profileImage!,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          )
+                              : Image.file(
+                            File(user.profileImage!),
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                            : Text(
+                          user?.name.substring(0, 1).toUpperCase() ?? 'U',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                      
+
                       const SizedBox(width: 16),
                       
                       Expanded(
@@ -232,14 +247,18 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
                   onTap: () {
-                    // Handle privacy policy
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                    );
                   },
                 ),
                 SettingsTile(
                   icon: Icons.description_outlined,
                   title: 'Terms & Conditions',
                   onTap: () {
-                    // Handle terms and conditions
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
+                    );
                   },
                 ),
               ],
