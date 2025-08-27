@@ -82,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          gradient: AppColors.bgGradient,
         ),
         child: Center(
           child: AnimatedBuilder(
@@ -96,47 +96,19 @@ class _SplashScreenState extends State<SplashScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow,
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.restaurant,
-                          size: 60,
-                          color: AppColors.primary,
+                        width: 200,
+                        height: 200,
+                        child: Image.asset(
+                          'assets/logo.jpg',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
-                        'Meat Valla',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Fresh Meat, Delivered Fresh',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
                       const SizedBox(height: 40),
                       const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF105D6D)),
                       ),
                     ],
                   ),

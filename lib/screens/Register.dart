@@ -65,29 +65,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
                 
                 // Logo and Title
                 Center(
                   child: Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
+                        children: [
+                        Container(
+                        width: 140,
+                        height: 140,
                         decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(
-                          Icons.restaurant,
-                          size: 40,
-                          color: Colors.white,
+                        child: Image.asset(
+                          'assets/logo.jpg',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(height: 16),

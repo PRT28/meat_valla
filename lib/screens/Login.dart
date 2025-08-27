@@ -63,26 +63,26 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 30),
                 
                 // Logo and Title
                 Center(
                   child: Column(
                     children: [
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 180,
+                        height: 180,
                         decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(
-                          Icons.restaurant,
-                          size: 40,
-                          color: Colors.white,
+                        child: Image.asset(
+                          'assets/logo.jpg',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(height: 16),
                       const Text(
                         'Welcome Back!',
                         style: TextStyle(

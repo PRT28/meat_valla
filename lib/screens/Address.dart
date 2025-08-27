@@ -6,6 +6,8 @@ import '../models/address_model.dart';
 import '../utils/app_colors.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../widgets/map_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddressScreen extends StatefulWidget {
   final AddressModel? address;
@@ -50,6 +52,10 @@ final Map<String, List<String>> indianStatesAndCities = {
   'West Bengal': ['Kolkata', 'Howrah', 'Siliguri'],
 };
 
+// final Map<String, List<String>> indianStatesAndCities = {
+//   'Uttarakhand': ['Dehradun', 'Nainital', 'Haldwani', 'Kashipur', 'Nainital', 'Bhimtal'],
+// };
+
 
 class _AddressScreenState extends State<AddressScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -61,6 +67,11 @@ class _AddressScreenState extends State<AddressScreen> {
   String? _selectedCity;
   final _pincodeController = TextEditingController();
   final _landmarkController = TextEditingController();
+  LatLng? selectedLocation;
+  String? errorMessage;
+
+  final LatLng storeLocation = LatLng(28.6315, 77.2167);
+  final Distance distance = const Distance();
   
   AddressType _selectedType = AddressType.home;
   bool _isDefault = false;
@@ -154,6 +165,20 @@ class _AddressScreenState extends State<AddressScreen> {
     }
   }
 
+  Future<void> _openMapPicker() async {
+    final result = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(builder: (_) => const MapPicker()),
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedLocation = result;
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.address != null;
@@ -221,6 +246,13 @@ class _AddressScreenState extends State<AddressScreen> {
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
+              ),
+
+              const SizedBox(height: 16),
+
+              ElevatedButton(
+                onPressed: _openMapPicker,
+                child: const Text("Pick location on map"),
               ),
               
               const SizedBox(height: 16),
