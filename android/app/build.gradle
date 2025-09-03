@@ -1,8 +1,5 @@
 plugins {
     id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -32,10 +29,6 @@ if (flutterVersionName == null) {
 }
 
 dependencies {
-    // ...
-
-
-    implementation("com.google.firebase:firebase-auth:19.0.0")
     implementation 'com.android.support:multidex:1.0.3'
     implementation("com.google.android.material:material:1.12.0")
 }

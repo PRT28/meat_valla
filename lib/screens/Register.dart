@@ -19,44 +19,111 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  final _otpController = TextEditingController();
+  bool _isOtpSent = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  void _handleRegister() async {
+  void _handleSendOtp() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
-      final success = await authProvider.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        name: _nameController.text.trim(),
+
+      // Check if user already exists
+      final userExists = await authProvider.checkUserExists(_phoneController.text.trim());
+
+      if (userExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account already exists with this phone number. Please login instead.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      final success = await authProvider.sendOtpForRegistration(
         phoneNumber: _phoneController.text.trim(),
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
       );
 
       if (success && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const BaseScreen()),
+        setState(() {
+          _isOtpSent = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP sent successfully!'),
+            backgroundColor: AppColors.success,
+          ),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.errorMessage ?? 'Registration failed'),
+            content: Text(authProvider.errorMessage ?? 'Failed to send OTP'),
             backgroundColor: AppColors.error,
           ),
         );
       }
+    }
+  }
+
+  void _handleVerifyOtp() async {
+    if (_otpController.text.trim().length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid 6-digit OTP'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.verifyOtp(
+      phoneNumber: _phoneController.text.trim(),
+      otp: _otpController.text.trim(),
+      isRegistration: true,
+    );
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const BaseScreen()),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Invalid OTP'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _resendOtp() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.sendOtpForRegistration(
+      phoneNumber: _phoneController.text.trim(),
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+    );
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP resent successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
     }
   }
 
@@ -90,174 +157,159 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
+                      const SizedBox(height: 0),
+                      Text(
+                        _isOtpSent ? 'Verify OTP' : 'Create Account',
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Join Meat Valla for fresh deliveries',
-                        style: TextStyle(
+                      Text(
+                        _isOtpSent
+                            ? 'Enter the OTP sent to ${_phoneController.text}'
+                            : 'Join Meat Valla for fresh deliveries',
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textSecondary,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
                 
-                const SizedBox(height: 40),
-                
-                // Name Field
-                CustomTextField(
-                  controller: _nameController,
-                  label: 'Full Name',
-                  prefixIcon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    if (value.length < 2) {
-                      return 'Name must be at least 2 characters';
-                    }
-                    return null;
-                  },
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Email Field
-                CustomTextField(
-                  controller: _emailController,
-                  label: 'Email Address',
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_outlined,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Phone Field
-                CustomTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: Icons.phone_outlined,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    if (value.length < 10) {
-                      return 'Please enter a valid phone number';
-                    }
-                    return null;
-                  },
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Password Field
-                CustomTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  obscureText: _obscurePassword,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
+                const SizedBox(height: 20),
+
+                if (!_isOtpSent) ...[
+                  // Name Field
+                  CustomTextField(
+                    controller: _nameController,
+                    label: 'Full Name',
+                    prefixIcon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      if (value.length < 2) {
+                        return 'Name must be at least 2 characters';
+                      }
+                      return null;
                     },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
 
-                    // Regex checks
-                    final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
-                    final lowercaseMatches = RegExp(r'[a-z]').allMatches(value).length;
-                    final digitMatches = RegExp(r'\d').allMatches(value).length;
+                  const SizedBox(height: 16),
 
-                    if (!hasUppercase) {
-                      return 'Password must contain at least 1 uppercase letter';
-                    }
-                    if (lowercaseMatches < 3) {
-                      return 'Password must contain at least 3 lowercase letters';
-                    }
-                    if (digitMatches < 4) {
-                      return 'Password must contain at least 4 numbers';
-                    }
-                    if (value.length < 8) {
-                      return 'Password must be at least 8 characters long';
-                    }
-
-                    return null; // valid
-                  },
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Confirm Password Field
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  obscureText: _obscureConfirmPassword,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
+                  // Email Field (Optional)
+                  CustomTextField(
+                    controller: _emailController,
+                    label: 'Email Address (Optional)',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.email_outlined,
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty && !value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
                     },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
+
+                  const SizedBox(height: 16),
+
+                  // Phone Field
+                  CustomTextField(
+                    controller: _phoneController,
+                    label: 'Phone Number',
+                    keyboardType: TextInputType.phone,
+                    prefixIcon: Icons.phone_outlined,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your phone number';
+                      }
+                      if (value.length < 10) {
+                        return 'Please enter a valid phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                ] else ...[
+                  // OTP Field
+                  CustomTextField(
+                    controller: _otpController,
+                    label: 'Enter OTP',
+                    keyboardType: TextInputType.number,
+                    prefixIcon: Icons.security_outlined,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the OTP';
+                      }
+                      if (value.length != 6) {
+                        return 'OTP must be 6 digits';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Resend OTP
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _resendOtp,
+                      child: const Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                
+
                 
                 const SizedBox(height: 32),
-                
-                // Register Button
+
+                // Register/Verify Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return CustomButton(
-                      onPressed: authProvider.isLoading ? null : _handleRegister,
+                      onPressed: authProvider.isLoading
+                          ? null
+                          : (_isOtpSent ? _handleVerifyOtp : _handleSendOtp),
                       isLoading: authProvider.isLoading,
-                      child: const Text('Create Account'),
+                      child: Text(_isOtpSent ? 'Verify OTP & Create Account' : 'Send OTP'),
                     );
                   },
                 ),
-                
+
+                if (_isOtpSent) ...[
+                  const SizedBox(height: 16),
+
+                  // Back to Registration Form
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isOtpSent = false;
+                        _otpController.clear();
+                      });
+                    },
+                    child: const Text(
+                      'Change Details',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 24),
-                
+
                 // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

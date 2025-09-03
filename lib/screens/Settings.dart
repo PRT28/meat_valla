@@ -13,6 +13,10 @@ import 'SendFeedback.dart';
 import 'About.dart';
 import 'Login.dart';
 import 'dart:io';
+import '../services/supabase_service.dart';
+import 'delivery_test_screen.dart';
+import 'address_flow_demo.dart';
+import 'location_test_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -47,6 +51,43 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _initializeSampleData(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Initializing sample data...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      await SupabaseService.initializeSampleData();
+      Navigator.of(context).pop(); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sample data initialized successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error initializing data: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -263,9 +304,63 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
+            // Developer Section
+            _buildSection(
+              'Developer',
+              [
+                SettingsTile(
+                  icon: Icons.data_usage,
+                  title: 'Initialize Sample Data',
+                  subtitle: 'Add sample products to database',
+                  onTap: () => _initializeSampleData(context),
+                ),
+                SettingsTile(
+                  icon: Icons.location_on,
+                  title: 'Test Address Flow',
+                  subtitle: 'Try the new location-based address flow',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddressFlowDemoScreen(),
+                      ),
+                    );
+                  },
+                ),
+                SettingsTile(
+                  icon: Icons.delivery_dining,
+                  title: 'Test Delivery Areas',
+                  subtitle: 'Check serviceability validation',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DeliveryTestScreen(),
+                      ),
+                    );
+                  },
+                ),
+                SettingsTile(
+                  icon: Icons.location_searching,
+                  title: 'Test Location Services',
+                  subtitle: 'Test geocoding and search functionality',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LocationTestScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
             // Logout Section
             _buildSection(
               'Account Actions',

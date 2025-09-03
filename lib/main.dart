@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,13 +9,13 @@ import 'providers/order_provider.dart';
 import 'providers/address_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_colors.dart';
-import 'firebase_options.dart';
+import 'supabase_options.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await SupabaseConfig.initialize();
+  // No need to initialize payment service - using simple web-based approach
   runApp(const MeatVallaApp());
 }
 

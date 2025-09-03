@@ -1,92 +1,149 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:meat_delivery/models/cred_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
+import '../supabase_options.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+  final SupabaseClient _supabase = SupabaseConfig.client;
+
   UserModel? _user;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _verificationId;
+  Map<String, dynamic>? _tempRegistrationData;
 
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _user != null;
+  bool get isAuthenticated => _user != null && _supabase.auth.currentSession != null;
 
   AuthProvider() {
-    _auth.authStateChanges().listen(_onAuthStateChanged);
+    _supabase.auth.onAuthStateChange.listen(_onAuthStateChanged);
+    _loadInitialUser();
   }
 
-  void _onAuthStateChanged(User? firebaseUser) async {
-    if (firebaseUser != null) {
-      await _loadUserData(firebaseUser.uid);
-    } else {
+  void _onAuthStateChanged(AuthState state) async {
+    if (state.event == AuthChangeEvent.signedIn && state.session != null) {
+      await _loadUserData(state.session!.user.id);
+    } else if (state.event == AuthChangeEvent.signedOut) {
       _user = null;
       notifyListeners();
     }
   }
 
+  Future<void> _loadInitialUser() async {
+    final session = _supabase.auth.currentSession;
+    if (session != null) {
+      await _loadUserData(session.user.id);
+    }
+  }
+
   Future<void> _loadUserData(String uid) async {
     try {
-      print(uid);
-      final doc = await _firestore.collection('users').doc(uid).get();
-      if (doc.exists) {
-        _user = UserModel.fromMap({...doc.data()!, 'id': uid});
-        notifyListeners();
-      }
+      final response = await _supabase
+          .from('users')
+          .select()
+          .eq('id', uid)
+          .single();
+
+      _user = UserModel.fromMap({...response, 'id': uid});
+      notifyListeners();
     } catch (e) {
       print('Error loading user data: $e');
     }
   }
 
-  Future<bool> signUp({
-    required String email,
-    required String password,
+  // Send OTP to phone number for registration
+  Future<bool> sendOtpForRegistration({
+    required String phoneNumber,
     required String name,
-    String? phoneNumber,
+    String? email,
   }) async {
     try {
       _setLoading(true);
       _clearError();
 
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      // Format phone number to international format if needed
+      String formattedPhone = phoneNumber;
+      if (!phoneNumber.startsWith('+')) {
+        formattedPhone = '+91$phoneNumber'; // Assuming Indian numbers, adjust as needed
+      }
+
+      await _supabase.auth.signInWithOtp(
+        phone: formattedPhone,
       );
 
-      if (credential.user != null) {
-        final userData = UserModel(
-          id: credential.user!.uid,
-          email: email,
-          name: name,
-          phoneNumber: phoneNumber,
-          createdAt: DateTime.now(),
-        );
+      // Store registration data temporarily for use after OTP verification
+      _tempRegistrationData = {
+        'phoneNumber': formattedPhone,
+        'name': name,
+        'email': email,
+      };
 
-        final credData = CredModel(
-          id: credential.user!.uid,
-          email: email,
-          name: name,
-          password: password,
-          phoneNumber: phoneNumber,
-          createdAt: DateTime.now(),
-        );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+    }
+    return false;
+  }
 
-        await _firestore
-            .collection('credentials')
-            .doc(credential.user!.uid)
-            .set(credData.toMap());
+  // Send OTP to phone number for login
+  Future<bool> sendOtpForLogin({required String phoneNumber}) async {
+    try {
+      _setLoading(true);
+      _clearError();
 
-        await _firestore
-            .collection('users')
-            .doc(credential.user!.uid)
-            .set(userData.toMap());
+      // Format phone number to international format if needed
+      String formattedPhone = phoneNumber;
+      if (!phoneNumber.startsWith('+')) {
+        formattedPhone = '+91$phoneNumber'; // Assuming Indian numbers, adjust as needed
+      }
 
-        _user = userData;
+      await _supabase.auth.signInWithOtp(
+        phone: formattedPhone,
+      );
+
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+    }
+    return false;
+  }
+
+  // Verify OTP for both login and registration
+  Future<bool> verifyOtp({
+    required String phoneNumber,
+    required String otp,
+    bool isRegistration = false,
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      // Format phone number to international format if needed
+      String formattedPhone = phoneNumber;
+      if (!phoneNumber.startsWith('+')) {
+        formattedPhone = '+91$phoneNumber'; // Assuming Indian numbers, adjust as needed
+      }
+
+      final response = await _supabase.auth.verifyOTP(
+        phone: formattedPhone,
+        token: otp,
+        type: OtpType.sms,
+      );
+
+      if (response.session != null) {
+        if (isRegistration && _tempRegistrationData != null) {
+          // Create user profile for new registration
+          await _createUserProfile(response.session!.user.id);
+        }
+
+        await _loadUserData(response.session!.user.id);
+        _tempRegistrationData = null; // Clear temp data
         _setLoading(false);
         return true;
       }
@@ -97,40 +154,49 @@ class AuthProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      _setLoading(true);
-      _clearError();
+  Future<void> _createUserProfile(String userId) async {
+    if (_tempRegistrationData == null) return;
 
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+    try {
+      final userData = UserModel(
+        id: userId,
+        email: _tempRegistrationData!['email'] ?? '',
+        name: _tempRegistrationData!['name'],
+        phoneNumber: _tempRegistrationData!['phoneNumber'],
+        createdAt: DateTime.now(),
       );
-      
-      _setLoading(false);
-      return true;
+
+      await _supabase
+          .from('users')
+          .insert(userData.toMap());
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      print('Error creating user profile: $e');
     }
-    return false;
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _supabase.auth.signOut();
     _user = null;
+    _tempRegistrationData = null;
     notifyListeners();
   }
 
-  Future<bool> resetPassword({required String email}) async {
+  // For password reset, we'll use phone-based OTP since we're using phone auth
+  Future<bool> sendPasswordResetOtp({required String phoneNumber}) async {
     try {
       _setLoading(true);
       _clearError();
 
-      await _auth.sendPasswordResetEmail(email: email);
+      // Format phone number to international format if needed
+      String formattedPhone = phoneNumber;
+      if (!phoneNumber.startsWith('+')) {
+        formattedPhone = '+91$phoneNumber'; // Assuming Indian numbers, adjust as needed
+      }
+
+      await _supabase.auth.signInWithOtp(
+        phone: formattedPhone,
+      );
+
       _setLoading(false);
       return true;
     } catch (e) {
@@ -144,6 +210,7 @@ class AuthProvider extends ChangeNotifier {
     String? name,
     String? phoneNumber,
     String? profileImage,
+    String? email,
   }) async {
     if (_user == null) return false;
 
@@ -155,13 +222,14 @@ class AuthProvider extends ChangeNotifier {
         name: name,
         phoneNumber: phoneNumber,
         profileImage: profileImage,
+        email: email,
         updatedAt: DateTime.now(),
       );
 
-      await _firestore
-          .collection('users')
-          .doc(_user!.id)
-          .update(updatedUser.toMap());
+      await _supabase
+          .from('users')
+          .update(updatedUser.toMap())
+          .eq('id', _user!.id);
 
       _user = updatedUser;
       _setLoading(false);
@@ -187,5 +255,27 @@ class AuthProvider extends ChangeNotifier {
   void _clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Check if user exists with phone number
+  Future<bool> checkUserExists(String phoneNumber) async {
+    try {
+      // Format phone number to international format if needed
+      String formattedPhone = phoneNumber;
+      if (!phoneNumber.startsWith('+')) {
+        formattedPhone = '+91$phoneNumber'; // Assuming Indian numbers, adjust as needed
+      }
+
+      final response = await _supabase
+          .from('users')
+          .select('id')
+          .eq('phoneNumber', formattedPhone)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      print('Error checking user existence: $e');
+      return false;
+    }
   }
 }

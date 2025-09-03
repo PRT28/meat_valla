@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'cart_model.dart';
 import 'address_model.dart';
 
@@ -38,7 +37,6 @@ class OrderModel {
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     DateTime? parseDate(dynamic value) {
       if (value == null) return null;
-      if (value is Timestamp) return value.toDate();
       if (value is String) return DateTime.tryParse(value);
       return null;
     }
@@ -68,6 +66,25 @@ class OrderModel {
       notes: map['notes'],
       trackingId: map['trackingId'],
     );
+  }
+
+
+  Map<String, dynamic> toCreateMap() {
+    return {
+      'userId': userId,
+      'items': items.map((item) => item.toMap()).toList(),
+      'deliveryAddress': deliveryAddress.toMap(),
+      'subtotal': subtotal,
+      'deliveryFee': deliveryFee,
+      'total': total,
+      'status': status.name,
+      'paymentMethod': paymentMethod.name,
+      'orderDate': orderDate.toIso8601String(),
+      'estimatedDelivery': estimatedDelivery?.toIso8601String(),
+      'deliveredAt': deliveredAt?.toIso8601String(),
+      'notes': notes,
+      'trackingId': trackingId,
+    };
   }
 
 
@@ -124,6 +141,46 @@ enum OrderStatus {
 
 enum PaymentMethod {
   cashOnDelivery,
+  card,
+  upi,
+  netBanking,
+  wallet,
+}
+
+extension PaymentMethodExtension on PaymentMethod {
+  String get displayName {
+    switch (this) {
+      case PaymentMethod.cashOnDelivery:
+        return 'Cash on Delivery';
+      case PaymentMethod.card:
+        return 'Credit/Debit Card';
+      case PaymentMethod.upi:
+        return 'UPI';
+      case PaymentMethod.netBanking:
+        return 'Net Banking';
+      case PaymentMethod.wallet:
+        return 'Wallet';
+    }
+  }
+
+  String get icon {
+    switch (this) {
+      case PaymentMethod.cashOnDelivery:
+        return '💵';
+      case PaymentMethod.card:
+        return '💳';
+      case PaymentMethod.upi:
+        return '📱';
+      case PaymentMethod.netBanking:
+        return '🏦';
+      case PaymentMethod.wallet:
+        return '👛';
+    }
+  }
+
+  bool get isOnline {
+    return this != PaymentMethod.cashOnDelivery;
+  }
 }
 
 extension OrderModelCopyWith on OrderModel {

@@ -11,6 +11,8 @@ class AddressModel {
   final String landmark;
   final AddressType type;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -27,6 +29,8 @@ class AddressModel {
     this.landmark = '',
     this.type = AddressType.home,
     this.isDefault = false,
+    this.latitude,
+    this.longitude,
     required this.createdAt,
     this.updatedAt,
   });
@@ -44,17 +48,19 @@ class AddressModel {
       pincode: map['pincode'] ?? '',
       landmark: map['landmark'] ?? '',
       type: AddressType.values.firstWhere(
-        (e) => e.toString() == 'AddressType.${map['type']}',
+        (e) => e.name == map['type'],
         orElse: () => AddressType.home,
       ),
       isDefault: map['isDefault'] ?? false,
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
       createdAt: DateTime.parse(map['createdAt']),
       updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = {
       'id': id,
       'userId': userId,
       'name': name,
@@ -70,6 +76,44 @@ class AddressModel {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
+
+    // Only add latitude/longitude if they are not null
+    if (latitude != null) {
+      map['latitude'] = latitude;
+    }
+    if (longitude != null) {
+      map['longitude'] = longitude;
+    }
+
+    return map;
+  }
+
+  Map<String, dynamic> toCreateMap() {
+    final map = {
+      'userId': userId,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'addressLine1': addressLine1,
+      'addressLine2': addressLine2,
+      'city': city,
+      'state': state,
+      'pincode': pincode,
+      'landmark': landmark,
+      'type': type.name,
+      'isDefault': isDefault,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+
+    // Only add latitude/longitude if they are not null
+    if (latitude != null) {
+      map['latitude'] = latitude;
+    }
+    if (longitude != null) {
+      map['longitude'] = longitude;
+    }
+
+    return map;
   }
 
   String get fullAddress {
@@ -108,6 +152,8 @@ extension AddressModelCopyWith on AddressModel {
     String? landmark,
     AddressType? type,
     bool? isDefault,
+    double? latitude,
+    double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -124,6 +170,8 @@ extension AddressModelCopyWith on AddressModel {
       landmark: landmark ?? this.landmark,
       type: type ?? this.type,
       isDefault: isDefault ?? this.isDefault,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

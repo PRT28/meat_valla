@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/order_model.dart';
 import '../models/cart_model.dart';
 import '../models/address_model.dart';
+import '../supabase_options.dart';
 
 class OrderProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = SupabaseConfig.client;
   
   List<OrderModel> _orders = [];
   bool _isLoading = false;
@@ -20,14 +21,14 @@ class OrderProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final querySnapshot = await _firestore
-          .collection('orders')
-          .where('userId', isEqualTo: userId)
-          .orderBy('orderDate', descending: true)
-          .get();
+      final response = await _supabase
+          .from('orders')
+          .select()
+          .eq('userId', userId)
+          .order('orderDate', ascending: false);
 
-      _orders = querySnapshot.docs
-          .map((doc) => OrderModel.fromMap({...doc.data(), 'id': doc.id}))
+      _orders = (response as List)
+          .map((data) => OrderModel.fromMap(data))
           .toList();
 
       _setLoading(false);
@@ -45,6 +46,7 @@ class OrderProvider extends ChangeNotifier {
     required AddressModel deliveryAddress,
     required double subtotal,
     required double deliveryFee,
+    PaymentMethod paymentMethod = PaymentMethod.cashOnDelivery,
     String? notes,
   }) async {
     try {
@@ -60,7 +62,7 @@ class OrderProvider extends ChangeNotifier {
         deliveryFee: deliveryFee,
         total: subtotal + deliveryFee,
         status: OrderStatus.placed,
-        paymentMethod: PaymentMethod.cashOnDelivery,
+        paymentMethod: paymentMethod,
         orderDate: DateTime.now(),
         estimatedDelivery: DateTime.now().add(const Duration(hours: 2)),
         notes: notes,
@@ -69,13 +71,18 @@ class OrderProvider extends ChangeNotifier {
 
       print(order);
 
-      final docRef = await _firestore.collection('orders').add(order.toMap());
+      final response = await _supabase
+          .from('orders')
+          .insert(order.toCreateMap())
+          .select()
+          .single();
 
-      _orders.insert(0, order);
-      
+      final createdOrder = OrderModel.fromMap(response);
+      _orders.insert(0, createdOrder);
+
       _setLoading(false);
       notifyListeners();
-      return docRef.id;
+      return createdOrder.id;
     } catch (e) {
       print("Error in placing order");
       print(e.toString());
@@ -87,10 +94,13 @@ class OrderProvider extends ChangeNotifier {
 
   Future<void> updateOrderStatus(String orderId, OrderStatus status) async {
     try {
-      await _firestore.collection('orders').doc(orderId).update({
-        'status': status.name,
-        'updatedAt': DateTime.now().toIso8601String(),
-      });
+      await _supabase
+          .from('orders')
+          .update({
+            'status': status.name,
+            'updatedAt': DateTime.now().toIso8601String(),
+          })
+          .eq('id', orderId);
 
       final orderIndex = _orders.indexWhere((order) => order.id == orderId);
       if (orderIndex != -1) {

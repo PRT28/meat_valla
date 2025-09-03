@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/address_model.dart';
+import '../supabase_options.dart';
 
 class AddressProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = SupabaseConfig.client;
   
   List<AddressModel> _addresses = [];
   AddressModel? _selectedAddress;
@@ -28,14 +29,14 @@ class AddressProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final querySnapshot = await _firestore
-          .collection('addresses')
-          .where('userId', isEqualTo: userId)
-          .orderBy('isDefault', descending: true)
-          .get();
+      final response = await _supabase
+          .from('addresses')
+          .select()
+          .eq('userId', userId)
+          .order('isDefault', ascending: false);
 
-      _addresses = querySnapshot.docs
-          .map((doc) => AddressModel.fromMap({...doc.data(), 'id': doc.id}))
+      _addresses = (response as List)
+          .map((data) => AddressModel.fromMap(data))
           .toList();
 
       // Set default selected address
@@ -60,9 +61,13 @@ class AddressProvider extends ChangeNotifier {
         await _updateDefaultAddress(null); // Clear existing defaults
       }
 
-      final docRef = await _firestore.collection('addresses').add(address.toMap());
-      
-      final createdAddress = address.copyWith(id: docRef.id);
+      final response = await _supabase
+          .from('addresses')
+          .insert(address.toCreateMap())
+          .select()
+          .single();
+
+      final createdAddress = AddressModel.fromMap(response);
       _addresses.add(createdAddress);
       
       if (address.isDefault || _addresses.length == 1) {
@@ -88,10 +93,10 @@ class AddressProvider extends ChangeNotifier {
         await _updateDefaultAddress(address.id);
       }
 
-      await _firestore
-          .collection('addresses')
-          .doc(address.id)
-          .update(address.toMap());
+      await _supabase
+          .from('addresses')
+          .update(address.toMap())
+          .eq('id', address.id);
 
       final index = _addresses.indexWhere((addr) => addr.id == address.id);
       if (index != -1) {
@@ -113,7 +118,10 @@ class AddressProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      await _firestore.collection('addresses').doc(addressId).delete();
+      await _supabase
+          .from('addresses')
+          .delete()
+          .eq('id', addressId);
       
       _addresses.removeWhere((address) => address.id == addressId);
       
@@ -132,19 +140,16 @@ class AddressProvider extends ChangeNotifier {
   }
 
   Future<void> _updateDefaultAddress(String? newDefaultId) async {
-    final batch = _firestore.batch();
-    
+    // Update all addresses to not be default except the new one
     for (final address in _addresses) {
       if (address.isDefault && address.id != newDefaultId) {
-        batch.update(
-          _firestore.collection('addresses').doc(address.id),
-          {'isDefault': false}
-        );
+        await _supabase
+            .from('addresses')
+            .update({'isDefault': false})
+            .eq('id', address.id);
       }
     }
-    
-    await batch.commit();
-    
+
     // Update local state
     for (int i = 0; i < _addresses.length; i++) {
       if (_addresses[i].isDefault && _addresses[i].id != newDefaultId) {

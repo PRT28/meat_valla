@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:meat_delivery/providers/order_provider.dart';
+
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/address_provider.dart';
@@ -8,7 +8,8 @@ import '../utils/app_colors.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/cart_item_widget.dart';
 import 'AddressList.dart';
-import 'OrderSuccess.dart';
+
+import 'payment_selection_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -88,9 +89,9 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               const Text(
                 'Confirm Order',
                 style: TextStyle(
@@ -99,9 +100,9 @@ class _CartScreenState extends State<CartScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               Consumer3<CartProvider, AddressProvider, AuthProvider>(
                 builder: (context, cartProvider, addressProvider, authProvider, child) {
                   return Expanded(
@@ -156,9 +157,9 @@ class _CartScreenState extends State<CartScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Payment Method
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -180,34 +181,27 @@ class _CartScreenState extends State<CartScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const Spacer(),
-                        
+
                         // Confirm Button
                         CustomButton(
-                          onPressed: () async {
-                            final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-                            final userProvider = Provider.of<AuthProvider>(context, listen: false);
-
-                            final success = await orderProvider.createOrder(
-                                userId: userProvider.user!.id,
-                                items: cartProvider.items,
-                                deliveryAddress: addressProvider.selectedAddress!,
-                                subtotal: cartProvider.subtotal,
-                                deliveryFee: cartProvider.deliveryFee
+                          onPressed: () {
+                            // Navigate to payment selection screen
+                            Navigator.of(context).pop(); // Close the current dialog
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PaymentSelectionScreen(
+                                  cartItems: cartProvider.items,
+                                  deliveryAddress: addressProvider.selectedAddress!,
+                                  subtotal: cartProvider.subtotal,
+                                  deliveryFee: cartProvider.deliveryFee,
+                                ),
+                              ),
                             );
-
-                            if (success != null) {
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
-                              );
-                              cartProvider.clearCart();
-                            }
-
-
                           },
-                          child: const Text('Confirm Order'),
+                          child: const Text('Proceed to Payment'),
                         ),
                       ],
                     ),

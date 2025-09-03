@@ -29,6 +29,17 @@ class CartItem {
     );
   }
 
+  Map<String, dynamic> toCreateMap() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'productImage': productImage,
+      'price': price,
+      'quantity': quantity,
+      'unit': unit,
+    };
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

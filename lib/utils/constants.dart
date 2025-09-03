@@ -25,12 +25,12 @@ class AppConstants {
   static const double maxQuantity = 10.0;
   static const double quantityStep = 0.25;
   
-  // Firebase Collections
-  static const String usersCollection = 'users';
-  static const String productsCollection = 'products';
-  static const String ordersCollection = 'orders';
-  static const String addressesCollection = 'addresses';
-  static const String feedbackCollection = 'feedback';
+  // Supabase Tables
+  static const String usersTable = 'users';
+  static const String productsTable = 'products';
+  static const String ordersTable = 'orders';
+  static const String addressesTable = 'addresses';
+  static const String feedbackTable = 'feedback';
   
   // Error Messages
   static const String networkError = 'Please check your internet connection';

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product_model.dart';
+import '../supabase_options.dart';
 
 class ProductProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = SupabaseConfig.client;
 
   List<ProductModel> _products = [];
   List<ProductModel> _favoriteProducts = [];
@@ -31,13 +32,13 @@ class ProductProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final querySnapshot = await _firestore
-          .collection('products')
-          .where('isAvailable', isEqualTo: true)
-          .get();
+      final response = await _supabase
+          .from('products')
+          .select()
+          .eq('isAvailable', true);
 
-      _products = querySnapshot.docs
-          .map((doc) => ProductModel.fromMap({...doc.data(), 'id': doc.id}))
+      _products = (response as List)
+          .map((data) => ProductModel.fromMap(data))
           .toList();
 
       _extractCategories();

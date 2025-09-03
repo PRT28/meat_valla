@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_colors.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../supabase_options.dart';
 
 class SendFeedbackScreen extends StatefulWidget {
   const SendFeedbackScreen({super.key});
@@ -17,7 +18,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = SupabaseConfig.client;
   
   String _selectedCategory = 'General';
   int _rating = 5;
@@ -48,8 +49,8 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
 
       try {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        
-        await _firestore.collection('feedback').add({
+
+        await _supabase.from('feedback').insert({
           'userId': authProvider.user?.id,
           'userEmail': authProvider.user?.email,
           'userName': authProvider.user?.name,
