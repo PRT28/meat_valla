@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/order_model.dart';
 import '../models/cart_model.dart';
 import '../models/address_model.dart';
-import '../services/simple_payment_service.dart';
+import '../services/upi_payment_service.dart';
 import '../utils/app_colors.dart';
 import 'payment_processing_screen.dart';
 
@@ -128,10 +128,10 @@ class _PaymentSelectionScreenState extends State<PaymentSelectionScreen> {
                   const SizedBox(height: 16),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: SimplePaymentService.getSupportedPaymentMethods().length,
+                      itemCount: UpiPaymentService.getSupportedPaymentMethods().length,
                       itemBuilder: (context, index) {
-                        final paymentMethod = SimplePaymentService.getSupportedPaymentMethods()[index];
-                        final config = SimplePaymentService.getPaymentMethodConfig(paymentMethod);
+                        final paymentMethod = UpiPaymentService.getSupportedPaymentMethods()[index];
+                        final config = UpiPaymentService.getPaymentMethodConfig(paymentMethod);
                         
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),

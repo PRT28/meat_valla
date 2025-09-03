@@ -10,12 +10,14 @@ import 'providers/address_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_colors.dart';
 import 'supabase_options.dart';
+import 'services/upi_payment_service.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
-  // No need to initialize payment service - using simple web-based approach
+  // Initialize UPI payment service
+  await UpiPaymentService.initialize();
   runApp(const MeatVallaApp());
 }
 

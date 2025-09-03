@@ -6,8 +6,8 @@ import '../models/address_model.dart';
 import '../providers/order_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
-import '../services/simple_payment_service.dart';
 import '../utils/app_colors.dart';
+import '../services/upi_payment_service.dart';
 import 'OrderSuccess.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
@@ -69,7 +69,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  SimplePaymentService.getPaymentMethodConfig(widget.paymentMethod).icon,
+                  UpiPaymentService.getPaymentMethodConfig(widget.paymentMethod).icon,
                   size: 64,
                   color: AppColors.primary,
                 ),
@@ -112,7 +112,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen> {
                       children: [
                         const Text('Payment Method:'),
                         Text(
-                          SimplePaymentService.getPaymentMethodConfig(widget.paymentMethod).title,
+                          UpiPaymentService.getPaymentMethodConfig(widget.paymentMethod).title,
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -227,16 +227,74 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen> {
 
   Future<void> _handleOnlinePayment(String orderId) async {
     setState(() {
-      _statusMessage = 'Setting up payment...';
+      _statusMessage = 'Setting up UPI payment...';
     });
 
     try {
-      // Process payment using simple payment service
-      final result = await SimplePaymentService.processWebPayment(
+      if (widget.paymentMethod == PaymentMethod.upi) {
+        await _handleUpiPayment(orderId);
+      } else {
+        // Other payment methods not yet implemented
+        setState(() {
+          _statusMessage = 'Payment method not yet available';
+          _isProcessing = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.paymentMethod.name} payment coming soon!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+        _statusMessage = 'Payment failed: ${e.toString()}';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUpiPayment(String orderId) async {
+    try {
+      setState(() {
+        _statusMessage = 'Opening UPI app...';
+      });
+
+      // Show UPI app selection
+      final selectedApp = await UpiPaymentService.showUpiAppSelection(context);
+
+      if (selectedApp == null) {
+        setState(() {
+          _statusMessage = 'Payment cancelled';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _statusMessage = 'Processing UPI payment...';
+      });
+
+      // Create transaction note
+      final transactionNote = UpiPaymentService.createTransactionNote(
+        orderId,
+        widget.cartItems,
+      );
+
+      // Process UPI payment
+      final result = await UpiPaymentService.processUpiPayment(
         orderId: orderId,
         amount: total,
-        paymentMethod: widget.paymentMethod,
-        context: context,
+        transactionNote: transactionNote,
+        preferredApp: selectedApp,
       );
 
       if (result.success) {
@@ -247,10 +305,16 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen> {
         });
 
         // Update order payment status
-        await SimplePaymentService.updateOrderPaymentStatus(
+        await UpiPaymentService.updateOrderPaymentStatus(
           orderId: orderId,
-          paymentIntentId: result.paymentIntentId!,
           status: 'paid',
+          transactionId: result.transactionId,
+          transactionRef: result.transactionRef,
+          paymentDetails: {
+            'upiApp': selectedApp.upiApplication.getAppName(),
+            'amount': total,
+            'currency': 'INR',
+          },
         );
 
         // Clear cart
@@ -285,12 +349,12 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen> {
     } catch (e) {
       setState(() {
         _isProcessing = false;
-        _statusMessage = 'Payment failed: ${e.toString()}';
+        _statusMessage = 'UPI payment failed: ${e.toString()}';
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Payment error: ${e.toString()}'),
+          content: Text('UPI payment error: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
